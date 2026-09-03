@@ -8,7 +8,13 @@ backend exists mainly so SessionMiddleware can reload the user each request
 via get_user(), and so django.contrib.auth.login() has a backend to record.
 """
 
+import sys
+
 from .models import User
+
+
+def _dbg(msg):
+    print(f"[LOGIN-DEBUG] LaravelStyleBackend: {msg}", file=sys.stderr, flush=True)
 
 
 class LaravelStyleBackend:
@@ -21,7 +27,18 @@ class LaravelStyleBackend:
         return user
 
     def get_user(self, user_id):
+        _dbg(f"get_user: reloading user_id={user_id} from session")
         try:
-            return User.objects.get(pk=user_id)
+            user = User.objects.get(pk=user_id)
+            _dbg(f"get_user: found {user!r}")
+            return user
         except User.DoesNotExist:
+            _dbg(f"get_user: no User with pk={user_id}")
             return None
+        except Exception:
+            import traceback
+
+            _dbg("get_user: UNHANDLED EXCEPTION - traceback follows")
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
+            raise

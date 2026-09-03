@@ -7,6 +7,9 @@ registration, exact error messages, role-based redirect target) are ported
 1:1 from the Laravel controllers via apps.accounts.services.
 """
 
+import sys
+import traceback
+
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
 from django.shortcuts import redirect, render
@@ -19,9 +22,17 @@ from . import services
 from .forms import LoginForm, ResendOtpForm, VerifyOtpForm
 
 
+def _dbg(msg):
+    print(f"[LOGIN-DEBUG] {msg}", file=sys.stderr, flush=True)
+
+
 def _redirect_home(user):
+    _dbg(f"_redirect_home: fetching roles for user_id={user.id}")
     roles = services.get_user_roles(user)
-    return redirect(resolve_home(roles, user.is_super_admin))
+    _dbg(f"_redirect_home: roles={roles} is_super_admin={user.is_super_admin}")
+    target = resolve_home(roles, user.is_super_admin)
+    _dbg(f"_redirect_home: resolve_home -> {target!r}")
+    return redirect(target)
 
 
 class LoginView(View):
@@ -33,19 +44,33 @@ class LoginView(View):
         return render(request, self.template_name, {"form": LoginForm(), "verified": request.GET.get("verified") == "1"})
 
     def post(self, request):
-        form = LoginForm(request.POST)
-        error = None
-        if form.is_valid():
-            user, error = services.authenticate_login(
-                form.cleaned_data["email"], form.cleaned_data["password"]
-            )
-            if user:
-                user.backend = "apps.accounts.backends.LaravelStyleBackend"
-                django_login(request, user)
-                return _redirect_home(user)
-        else:
-            error = "Please enter a valid email and password."
-        return render(request, self.template_name, {"form": form, "error": error, "verified": False})
+        _dbg("post(): received login POST")
+        try:
+            form = LoginForm(request.POST)
+            error = None
+            _dbg("post(): validating form")
+            if form.is_valid():
+                _dbg(f"post(): form valid, email={form.cleaned_data['email']!r} - calling authenticate_login")
+                user, error = services.authenticate_login(
+                    form.cleaned_data["email"], form.cleaned_data["password"]
+                )
+                _dbg(f"post(): authenticate_login returned user={user!r} error={error!r}")
+                if user:
+                    user.backend = "apps.accounts.backends.LaravelStyleBackend"
+                    _dbg(f"post(): calling django_login for user_id={user.id}")
+                    django_login(request, user)
+                    _dbg("post(): django_login succeeded, session established - resolving redirect")
+                    return _redirect_home(user)
+            else:
+                _dbg(f"post(): form invalid, errors={form.errors!r}")
+                error = "Please enter a valid email and password."
+            _dbg("post(): rendering login template with error")
+            return render(request, self.template_name, {"form": form, "error": error, "verified": False})
+        except Exception:
+            _dbg("post(): UNHANDLED EXCEPTION - traceback follows")
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
+            raise
 
 
 class LogoutView(View):

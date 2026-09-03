@@ -10,6 +10,8 @@ Also holds the template views for the shared dashboard-home routes
 (/platform, /platform/manager, /platform/me) and small legacy routes.
 """
 
+import sys
+
 from django.shortcuts import redirect, render
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -17,6 +19,10 @@ from rest_framework.views import APIView
 from .decorators import admin_required, login_required_view, role_required
 from .nav import resolve_home
 from .pagination import paginate
+
+
+def _dbg(msg):
+    print(f"[LOGIN-DEBUG] core.views: {msg}", file=sys.stderr, flush=True)
 
 
 class EnvelopeAPIView(APIView):
@@ -74,24 +80,31 @@ def landing(request):
 @login_required_view
 def home_redirect(request):
     """Mirrors resolveHome() call sites (dashboard/page.tsx, login redirect)."""
+    _dbg("home_redirect: start")
     roles = request.user.get_role_names()
-    return redirect(resolve_home(roles, request.user.is_super_admin))
+    target = resolve_home(roles, request.user.is_super_admin)
+    _dbg(f"home_redirect: roles={roles} -> {target!r}")
+    return redirect(target)
 
 
 @admin_required
 def platform_home(request):
+    _dbg(f"platform_home: rendering for user_id={request.user.id}")
     return render(request, "core/platform_home.html", {})
 
 
 @role_required("Team Lead", "Org Admin", "HR Manager")
 def manager_home(request):
+    _dbg(f"manager_home: rendering for user_id={request.user.id}")
     return render(request, "core/manager_home.html", {})
 
 
 @login_required_view
 def me_home(request):
+    _dbg(f"me_home: start for user_id={request.user.id} is_super_admin={request.user.is_super_admin}")
     if request.user.is_super_admin:
         return redirect("platform_admin:super_dashboard")
+    _dbg("me_home: rendering template")
     return render(request, "core/me_home.html", {})
 
 

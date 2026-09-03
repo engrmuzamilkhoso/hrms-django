@@ -6,6 +6,8 @@ testable end-to-end now (see apps.super-admin.layout.tsx port at
 templates/partials/super_admin_shell.html).
 """
 
+import sys
+
 from django.shortcuts import render
 
 from apps.core.decorators import super_admin_required
@@ -13,6 +15,7 @@ from apps.core.decorators import super_admin_required
 
 @super_admin_required
 def super_dashboard(request):
+    print(f"[LOGIN-DEBUG] super_dashboard: rendering for user_id={request.user.id}", file=sys.stderr, flush=True)
     return render(request, "platform_admin/dashboard.html", {})
 
 

@@ -10,9 +10,16 @@ AuthenticationMiddleware for every request; views that need a tenant use the
 inspect `request.organization_id` the same way Laravel controllers did.
 """
 
+import sys
+import traceback
+
 from django.http import HttpResponseForbidden
 
 from .tenancy import set_current_organization_id
+
+
+def _dbg(msg):
+    print(f"[LOGIN-DEBUG] TenantMiddleware: {msg}", file=sys.stderr, flush=True)
 
 
 class TenantMiddleware:
@@ -20,15 +27,25 @@ class TenantMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        _dbg(f"__call__: {request.method} {request.path}")
         organization_id = None
         user = getattr(request, "user", None)
-        if user is not None and getattr(user, "is_authenticated", False):
+        is_authenticated = user is not None and getattr(user, "is_authenticated", False)
+        _dbg(f"__call__: user={user!r} is_authenticated={is_authenticated}")
+        if is_authenticated:
             organization_id = getattr(user, "organization_id", None)
 
         request.organization_id = organization_id
+        _dbg(f"__call__: organization_id={organization_id} - calling get_response")
         set_current_organization_id(organization_id)
         try:
             response = self.get_response(request)
+            _dbg(f"__call__: get_response returned status={getattr(response, 'status_code', '?')}")
+        except Exception:
+            _dbg("__call__: UNHANDLED EXCEPTION from get_response - traceback follows")
+            traceback.print_exc(file=sys.stderr)
+            sys.stderr.flush()
+            raise
         finally:
             set_current_organization_id(None)
         return response

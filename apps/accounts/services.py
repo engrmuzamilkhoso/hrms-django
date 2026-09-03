@@ -7,6 +7,7 @@ apps.accounts.api / apps.accounts.views.
 """
 
 import random
+import sys
 from datetime import timedelta
 
 from django.conf import settings
@@ -38,20 +39,31 @@ PLAN_LIMITS = {"trial": 20, "silver": 30, "gold": 50, "platinum": 100}
 # looking up by email globally (first match) rather than per-organization.
 # ---------------------------------------------------------------------------
 def authenticate_login(email, password):
-    user = User.objects.filter(email=email).order_by("id").first()
+    def _dbg(msg):
+        print(f"[LOGIN-DEBUG] authenticate_login: {msg}", file=sys.stderr, flush=True)
 
+    _dbg(f"looking up user for email={email!r}")
+    user = User.objects.filter(email=email).order_by("id").first()
+    _dbg(f"user lookup result: {user!r}")
+
+    _dbg("checking password")
     password_ok = bool(user) and user.check_password(password)
+    _dbg(f"password_ok={password_ok}")
     if not password_ok:
         return None, "Invalid credentials"
 
+    _dbg(f"checking is_active={user.is_active}")
     if not user.is_active:
         return None, "Your account has been deactivated. Contact your administrator."
 
+    _dbg(f"checking org status, organization_id={user.organization_id} is_super_admin={user.is_super_admin}")
     if user.organization_id and not user.is_super_admin:
         org = Organization.objects.filter(pk=user.organization_id).first()
+        _dbg(f"org lookup result: {org!r} status={getattr(org, 'status', None)!r}")
         if org and org.status == "inactive":
             return None, "Your organization has been deactivated. Please contact platform support."
 
+    _dbg("all checks passed, returning user")
     return user, None
 
 
