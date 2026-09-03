@@ -1,0 +1,36 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% block title %}Manager View — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Manager View</h1>
+  <p>Your team at a glance</p>
+</div>
+
+<div id="loading" class="flex items-center justify-center py-16">
+  <div class="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+</div>
+<div id="error-box" hidden class="rounded-lg border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-400"></div>
+
+<div id="content" hidden>
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-5 mb-6">
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Team Size</p><p class="text-2xl font-bold text-white" id="stat-team-size">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Present Today</p><p class="text-2xl font-bold text-white" id="stat-present">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">On Leave</p><p class="text-2xl font-bold text-white" id="stat-on-leave">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Absent</p><p class="text-2xl font-bold text-white" id="stat-absent">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Pending Requests</p><p class="text-2xl font-bold text-white" id="stat-pending">—</p></div>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Team Members</p>
+      <ul id="team-members" class="divide-y divide-white/5"></ul>
+    </div>
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Pending Leave Requests</p>
+      <ul id="pending-leaves" class="divide-y divide-white/5"></ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/manager-dashboard.js' %}"></script>{% endblock %}

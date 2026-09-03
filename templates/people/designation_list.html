@@ -1,0 +1,46 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% block title %}Designations — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header flex items-center justify-between">
+  <div>
+    <h1>Designations</h1>
+    <p>Job titles and salary grades</p>
+  </div>
+  <button id="add-btn" class="btn-primary rounded-xl px-4 py-2.5 text-sm"><span>+ Add Designation</span></button>
+</div>
+
+<div id="loading-spinner" class="flex items-center justify-center py-20">
+  <div class="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+</div>
+<div id="empty-state" hidden class="rounded-2xl border border-white/8 bg-white/3 p-16 text-center text-slate-400">No designations yet</div>
+<div id="table-wrap" hidden class="overflow-x-auto rounded-2xl border border-white/8">
+  <table class="data-table w-full">
+    <thead><tr><th>Title</th><th>Grade</th><th>Base Salary</th><th>Employees</th><th>Status</th><th></th></tr></thead>
+    <tbody id="designations-tbody"></tbody>
+  </table>
+</div>
+
+<div id="form-modal" hidden class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="modal-card relative w-full max-w-sm rounded-2xl p-6">
+    <h2 class="text-lg font-semibold text-slate-100 mb-4">Designation</h2>
+    <form id="designation-form" class="space-y-4">
+      <input type="hidden" id="form-id">
+      <div>
+        <label class="form-label">Title</label>
+        <input id="form-title" required class="form-input">
+      </div>
+      <div>
+        <label class="form-label">Grade</label>
+        <input id="form-grade" class="form-input">
+      </div>
+      <div class="flex gap-3 pt-2">
+        <button type="button" id="modal-cancel" class="btn-secondary flex-1 rounded-xl py-2.5 text-sm">Cancel</button>
+        <button type="submit" class="btn-primary flex-1 rounded-xl py-2.5 text-sm"><span>Save</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/designation-list.js' %}"></script>{% endblock %}

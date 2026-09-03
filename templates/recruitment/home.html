@@ -1,0 +1,77 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/platform/recruitment/page.tsx.{% endcomment %}
+{% block title %}Recruitment — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Recruitment & ATS</h1><p>Manage job postings, track candidates through the pipeline, and convert hires.</p></div>
+
+<div class="tab-bar" id="rec-tab-bar">
+  <button class="tab-btn active" data-tab="jobs">Job Postings</button>
+  <button class="tab-btn" data-tab="pipeline">ATS Pipeline</button>
+  <button class="tab-btn" data-tab="add">Add Candidate</button>
+</div>
+
+<!-- JOBS -->
+<div class="tab-panel mt-6" data-panel="jobs">
+  <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div>
+      <h2 class="font-semibold mb-3">Active Job Postings</h2>
+      <div id="jobs-list" class="space-y-3"><p class="text-sm text-slate-500">Loading…</p></div>
+    </div>
+    <form id="job-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+      {% csrf_token %}
+      <h2 class="font-semibold mb-4">Post New Job</h2>
+      <div class="space-y-3">
+        <div><label class="form-label">Job Title</label><input name="title" required class="form-input"></div>
+        <div><label class="form-label">Job Description</label><textarea name="job_description" rows="4" required class="form-input"></textarea></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="form-label">Openings</label><input name="openings" type="number" min="1" value="1" class="form-input"></div>
+          <div><label class="form-label">Deadline</label><input name="deadline" type="date" class="form-input"></div>
+        </div>
+        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="job-save-btn"><span>Create Job Posting</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- PIPELINE -->
+<div class="tab-panel mt-6" data-panel="pipeline" hidden>
+  <div class="mb-4 flex items-center gap-3" id="pipeline-job-filter" hidden>
+    <label class="text-sm text-slate-400">Job:</label>
+    <select id="pipeline-job-select" class="form-select w-56 text-sm"></select>
+    <span class="form-label" id="pipeline-candidate-count"></span>
+  </div>
+  <div class="overflow-x-auto">
+    <div class="flex gap-3" id="pipeline-board"></div>
+  </div>
+</div>
+
+<!-- ADD CANDIDATE -->
+<div class="tab-panel mt-6" data-panel="add" hidden>
+  <div class="max-w-lg">
+    <form id="candidate-form" class="rounded-xl border border-white/8 bg-white/3 p-5">
+      {% csrf_token %}
+      <h2 class="font-semibold mb-4">Add Candidate Manually</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="form-label">Job Posting</label>
+          <select name="job_posting_id" required class="form-select" id="candidate-job-select"><option value="">Select job</option></select>
+        </div>
+        <div><label class="form-label">Full Name</label><input name="full_name" required class="form-input"></div>
+        <div><label class="form-label">Email</label><input name="email" type="email" required class="form-input"></div>
+        <div>
+          <label class="form-label">Source</label>
+          <select name="source" class="form-select">
+            <option value="manual">Manual / Referral</option>
+            <option value="cv_upload">CV Upload</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="job_board">Job Board</option>
+          </select>
+        </div>
+        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="candidate-save-btn"><span>Add to Pipeline</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/recruitment-home.js' %}"></script>{% endblock %}

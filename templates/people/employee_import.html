@@ -1,0 +1,74 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/dashboard/employees/import/page.tsx. The
+original called the wrong endpoint (/employee-import/import instead of the
+real /employees/import route) so this button always 404'd in the live app -
+fixed here to call the real, now-implemented endpoint.{% endcomment %}
+{% block title %}Import Employees — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+  <a href="{% url 'people:employee_list' %}" class="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-300 transition mb-4">← Back to Employees</a>
+  <div class="page-header"><h1>Import Employees</h1><p>Bulk import employees from a CSV or Excel file</p></div>
+
+  <div id="import-error" hidden class="mb-5 flex gap-2.5 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3"><p class="text-sm text-red-400" id="import-error-text"></p></div>
+  <div id="import-success" hidden class="mb-5 flex gap-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3"><p class="text-sm text-emerald-400" id="import-success-text"></p></div>
+
+  <form id="import-form" class="form-section space-y-6 mb-6">
+    {% csrf_token %}
+    <div>
+      <label class="form-label">Select File</label>
+      <div class="mt-1 border-2 border-dashed border-white/10 rounded-xl p-8 text-center hover:border-white/20 transition cursor-pointer" id="dropzone">
+        <input type="file" name="file" accept=".csv,.xlsx,.xls" class="hidden" id="file-input">
+        <label for="file-input" class="cursor-pointer block">
+          <div class="text-3xl mb-2">📁</div>
+          <p class="text-slate-300 font-medium text-sm" id="dropzone-label">Click to upload or drag and drop</p>
+          <p class="text-xs text-slate-500 mt-1">CSV or Excel file (Max 5MB)</p>
+        </label>
+      </div>
+    </div>
+
+    <div class="space-y-3 rounded-xl bg-white/3 border border-white/7 p-4">
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="skip_duplicates" class="w-4 h-4 rounded accent-violet-500">
+        <span class="text-sm text-slate-300">Skip duplicate employee codes</span>
+      </label>
+      <label class="flex items-center gap-3 cursor-pointer">
+        <input type="checkbox" name="auto_send_credentials" class="w-4 h-4 rounded accent-violet-500">
+        <span class="text-sm text-slate-300">Send login credentials automatically</span>
+      </label>
+    </div>
+
+    <div class="flex gap-3 pt-2">
+      <button type="submit" class="btn-primary flex-1 rounded-xl py-3 text-sm" id="import-submit-btn"><span>Import Employees</span></button>
+      <a href="{% url 'people:employee_list' %}" class="btn-secondary flex-none rounded-xl px-6 py-3 text-sm text-center">Cancel</a>
+    </div>
+  </form>
+
+  <div class="form-section mb-6">
+    <h3 class="text-sm font-semibold text-slate-200 mb-3">File Format</h3>
+    <p class="text-xs text-slate-500 mb-3">Your file should contain the following columns:</p>
+    <div class="rounded-lg bg-white/3 border border-white/7 p-3 mb-4 text-xs text-slate-400 font-mono overflow-x-auto">
+      Employee Code | Full Name | Email | Phone | Hire Date | Office ID | Department ID | Designation | Employment Status
+    </div>
+    <button type="button" id="download-template-btn" class="btn-secondary rounded-xl px-4 py-2 text-sm">📥 Download Template</button>
+  </div>
+
+  <div id="import-results" hidden class="form-section space-y-5">
+    <h3 class="text-sm font-semibold text-slate-200">Import Results</h3>
+    <div class="grid grid-cols-3 gap-4">
+      <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/20 p-4"><p class="text-emerald-400 font-bold text-2xl" id="result-imported">0</p><p class="text-xs text-slate-400 mt-1">Imported</p></div>
+      <div id="result-duplicates-card" hidden class="rounded-xl bg-amber-500/10 border border-amber-500/20 p-4"><p class="text-amber-400 font-bold text-2xl" id="result-duplicates">0</p><p class="text-xs text-slate-400 mt-1">Duplicates</p></div>
+      <div id="result-errors-card" hidden class="rounded-xl bg-red-500/10 border border-red-500/20 p-4"><p class="text-red-400 font-bold text-2xl" id="result-errors">0</p><p class="text-xs text-slate-400 mt-1">Errors</p></div>
+    </div>
+    <div id="errors-section" hidden>
+      <p class="text-xs font-semibold text-red-400 mb-2">Errors:</p>
+      <div class="space-y-1.5 max-h-48 overflow-y-auto" id="errors-list"></div>
+    </div>
+    <div id="duplicates-section" hidden>
+      <p class="text-xs font-semibold text-amber-400 mb-2">Skipped Duplicates:</p>
+      <div class="space-y-1.5 max-h-48 overflow-y-auto" id="duplicates-list"></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/employee-import.js' %}"></script>{% endblock %}

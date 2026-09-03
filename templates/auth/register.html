@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+{% comment %}
+Functional port of app/auth/register/page.tsx's two-step flow. Simplified
+relative to the original (no animated countdown ring / plan-card grid
+polish, no country/timezone SearchSelect data-fetch) but behaviorally
+equivalent: same two API calls, same fields, same step transition.
+{% endcomment %}
+{% block title %}Create Organization — WorkForce HRMS{% endblock %}
+{% block body %}
+<div class="h-screen overflow-hidden flex" style="background:var(--bg-base)">
+  <div class="auth-brand-panel hidden lg:flex lg:w-1/2 flex-col justify-center px-12 py-10">
+    <a href="{% url 'landing' %}" class="inline-flex items-center gap-3 mb-8">
+      <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+        <svg class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+      </div>
+      <span class="text-xl font-bold tracking-tight text-white">WorkForce <span class="text-violet-400">HRMS</span></span>
+    </a>
+    <h1 class="text-3xl font-extrabold leading-tight text-white">HR operations,<br><span class="bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">finally simplified.</span></h1>
+    <p class="mt-3 text-sm text-slate-400 max-w-sm">Everything your team needs — from onboarding to payroll — in one beautifully designed platform.</p>
+  </div>
+
+  <div class="w-full lg:w-1/2 h-full overflow-y-auto flex items-center justify-center px-6 sm:px-10 py-6">
+    <div class="w-full max-w-lg">
+
+      <div id="step-form">
+        <div class="mb-5">
+          <span class="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Step 1 of 2</span>
+          <h2 class="text-xl font-bold text-white">Create your organization</h2>
+          <p class="mt-0.5 text-sm text-slate-500">Already have an account? <a href="{% url 'accounts:login' %}" class="text-violet-400 hover:underline">Sign in</a></p>
+        </div>
+
+        <form id="register-form" class="space-y-3">
+          {% csrf_token %}
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="form-label">Organization Name</label><input name="organization_name" class="form-input" placeholder="Acme Corp" required></div>
+            <div><label class="form-label">Organization Email</label><input name="email" type="email" class="form-input" placeholder="admin@acme.com" required></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="form-label">Password</label><input name="password" type="password" class="form-input" required></div>
+            <div><label class="form-label">Confirm Password</label><input name="password_confirm" type="password" class="form-input" required></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="form-label">Country Code</label><input name="country_code" class="form-input" placeholder="PK" maxlength="2" value="PK" required></div>
+            <div><label class="form-label">Industry</label><input name="industry" class="form-input" placeholder="Software & Technology" value="Software & Technology" required></div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div><label class="form-label">Currency</label><input name="default_currency" class="form-input" placeholder="PKR" maxlength="3" value="PKR" required></div>
+            <div><label class="form-label">Timezone</label><input name="timezone" class="form-input" placeholder="Asia/Karachi" value="Asia/Karachi" required></div>
+          </div>
+          <div>
+            <label class="form-label">Plan</label>
+            <select name="plan_code" class="form-select">
+              <option value="trial">Trial — Free, up to 20 users</option>
+              <option value="silver">Silver — $29/mo, up to 30 users</option>
+              <option value="gold">Gold — $79/mo, up to 50 users</option>
+              <option value="platinum">Platinum — $149/mo, up to 100 users</option>
+            </select>
+          </div>
+
+          <div id="form-error" hidden class="rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400"></div>
+
+          <div class="flex gap-3 pt-1">
+            <a href="{% url 'accounts:login' %}" class="btn-secondary rounded-xl py-2.5 px-5 text-sm text-center">← Back</a>
+            <button type="submit" class="btn-primary flex-1 rounded-xl py-2.5 text-sm"><span>Create Organization →</span></button>
+          </div>
+        </form>
+      </div>
+
+      <div id="step-otp" hidden>
+        <div class="mb-5">
+          <span class="text-[11px] font-semibold uppercase tracking-widest text-slate-500">Step 2 of 2</span>
+          <h2 class="text-xl font-bold text-white">Verify your email</h2>
+          <p class="mt-0.5 text-sm text-slate-500">Code sent to <span id="otp-email-label" class="text-slate-300 font-medium"></span></p>
+        </div>
+
+        <p id="timer-label" class="text-sm text-slate-400 mb-4"></p>
+
+        <form id="otp-form" class="space-y-4">
+          {% csrf_token %}
+          <div>
+            <label class="form-label">6-digit code</label>
+            <input id="otp-code-input" type="text" maxlength="6" required autocomplete="one-time-code"
+              class="form-input text-center text-3xl tracking-[1rem] font-bold" placeholder="000000">
+          </div>
+          <div id="otp-error" hidden class="rounded-xl bg-red-500/10 border border-red-500/20 px-3 py-2.5 text-sm text-red-400"></div>
+          <div class="flex gap-3">
+            <button type="button" id="back-btn" class="btn-secondary rounded-xl py-2.5 px-4 text-sm">← Back</button>
+            <button type="button" id="resend-btn" class="rounded-xl py-2.5 px-4 text-sm font-medium" style="background:rgba(28,98,253,0.15);border:1px solid rgba(28,98,253,0.35);color:#4c82ff">↺ Resend code</button>
+            <button type="submit" class="btn-primary flex-1 rounded-xl py-2.5 text-sm"><span>Verify & Continue →</span></button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/register.js' %}"></script>{% endblock %}

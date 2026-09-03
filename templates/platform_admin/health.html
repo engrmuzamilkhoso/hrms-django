@@ -1,0 +1,40 @@
+{% extends "partials/super_admin_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/super-admin/health/page.tsx.{% endcomment %}
+{% block title %}System Health — Super Admin{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div class="flex items-center gap-2 mb-2">
+    <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+    <p class="text-xs font-semibold uppercase tracking-widest text-amber-400">Super Admin</p>
+  </div>
+  <div class="flex items-center justify-between">
+    <div>
+      <h1>System Health</h1>
+      <p>Real-time platform vitals and infrastructure metrics.</p>
+    </div>
+    <button id="refresh-btn" class="flex items-center gap-2 rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-400 hover:bg-white/5 hover:text-slate-200 transition">Refresh</button>
+  </div>
+</div>
+
+<div id="status-banner" hidden class="mb-8 rounded-xl border px-5 py-4 flex items-center justify-between">
+  <div class="flex items-center gap-3">
+    <span id="status-dot" class="h-3 w-3 rounded-full animate-pulse"></span>
+    <div>
+      <p id="status-label" class="text-sm font-semibold"></p>
+      <p id="status-desc" class="text-xs text-slate-500"></p>
+    </div>
+  </div>
+  <p id="last-refreshed" class="text-xs text-slate-600"></p>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" id="metrics-grid">
+  <div class="stat-card border-white/8"><p class="text-xs uppercase text-slate-500 mb-4">Loading…</p></div>
+</div>
+
+<div class="mt-8 glass rounded-xl p-5" id="raw-response" hidden>
+  <h2 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-3">Raw Response</h2>
+  <pre class="text-xs text-slate-500 overflow-x-auto" id="raw-json"></pre>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/super-admin-health.js' %}"></script>{% endblock %}

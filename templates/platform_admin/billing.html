@@ -1,0 +1,95 @@
+{% extends "partials/super_admin_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/super-admin/billing/page.tsx.{% endcomment %}
+{% block title %}Billing — Super Admin{% endblock %}
+{% block content %}
+<div class="page-header flex items-start justify-between">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <p class="text-xs font-semibold uppercase tracking-widest text-amber-400">Super Admin</p>
+    </div>
+    <h1>Billing & Invoices</h1>
+    <p>Manage subscription invoices and plan pricing.</p>
+  </div>
+  <button id="generate-btn" class="btn-primary rounded-xl px-5 py-2.5 text-sm"><span>+ Generate Invoices</span></button>
+</div>
+
+<div class="flex gap-1 rounded-xl border border-white/8 bg-white/3 p-1 w-fit mb-7" id="page-tab-bar">
+  <button class="page-tab-btn bg-white/8 text-slate-200 px-5 py-2 rounded-lg text-sm font-semibold transition" data-page-tab="invoices">Invoices</button>
+  <button class="page-tab-btn text-slate-500 px-5 py-2 rounded-lg text-sm font-semibold transition" data-page-tab="pricing">Plan Pricing</button>
+</div>
+
+<!-- INVOICES PANEL -->
+<div id="invoices-panel">
+  <div class="grid gap-4 sm:grid-cols-4 mb-8">
+    <div class="stat-card bg-gradient-to-br from-amber-500/15 to-orange-500/10 border-amber-500/20"><p class="text-xs uppercase text-slate-500">Total Orgs</p><p class="mt-3 text-3xl font-bold text-amber-400" id="s-orgs">—</p></div>
+    <div class="stat-card bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border-emerald-500/20"><p class="text-xs uppercase text-slate-500">Revenue Collected</p><p class="mt-3 text-3xl font-bold text-emerald-400" id="s-revenue">—</p></div>
+    <div class="stat-card bg-gradient-to-br from-amber-500/10 to-yellow-500/5 border-amber-500/15"><p class="text-xs uppercase text-slate-500">Outstanding</p><p class="mt-3 text-3xl font-bold text-amber-300" id="s-outstanding">—</p></div>
+    <div class="stat-card bg-gradient-to-br from-rose-500/15 to-red-500/10 border-rose-500/20"><p class="text-xs uppercase text-slate-500">Overdue</p><p class="mt-3 text-3xl font-bold text-rose-400" id="s-overdue">—</p></div>
+  </div>
+
+  <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+    <div class="flex gap-1 rounded-xl border border-white/8 bg-white/3 p-1" id="status-tab-bar">
+      <button class="status-tab-btn bg-white/8 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-status-tab="all">All Invoices</button>
+      <button class="status-tab-btn text-slate-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-status-tab="pending">Pending</button>
+      <button class="status-tab-btn text-slate-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-status-tab="overdue">Overdue</button>
+      <button class="status-tab-btn text-slate-500 px-3 py-1.5 rounded-lg text-xs font-semibold transition" data-status-tab="paid">Completed</button>
+    </div>
+    <select id="period-filter" class="form-select text-sm w-48"><option value="all">All Periods</option></select>
+  </div>
+
+  <div class="overflow-x-auto rounded-xl border border-white/8">
+    <table class="data-table w-full">
+      <thead><tr><th>Invoice #</th><th>Organization</th><th>Period</th><th>Plan</th><th class="text-right">Employees</th><th class="text-right">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="invoices-tbody"><tr><td colspan="9" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- PRICING PANEL -->
+<div id="pricing-panel" hidden>
+  <div class="mb-6 rounded-xl border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-xs text-amber-300">
+    Trial plan is always free and cannot be changed. Custom plan pricing is set per-organization when changing their plan.
+    Price changes apply to newly generated invoices only.
+  </div>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="pricing-grid"></div>
+</div>
+
+<!-- Invoice detail modal -->
+<div id="invoice-modal" hidden class="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="modal-card relative w-full max-w-2xl rounded-2xl mt-6 mb-6">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/8">
+      <h3 class="text-base font-semibold text-slate-100">Invoice Details</h3>
+      <button type="button" id="invoice-modal-close" class="text-slate-500 hover:text-slate-300">&times;</button>
+    </div>
+    <div class="p-6 text-sm text-slate-300" id="invoice-modal-body"></div>
+  </div>
+</div>
+
+<!-- Generate invoices modal -->
+<div id="generate-modal" hidden class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="modal-card relative w-full max-w-sm rounded-2xl p-6">
+    <div class="flex items-start justify-between mb-5">
+      <div><h3 class="text-base font-semibold text-slate-100">Generate Invoices</h3><p class="text-xs text-slate-500 mt-0.5">Creates one invoice per organization.</p></div>
+      <button type="button" id="generate-close" class="text-slate-500 hover:text-slate-300">&times;</button>
+    </div>
+    <div id="generate-result" hidden class="rounded-xl border border-emerald-500/25 bg-emerald-500/8 px-4 py-5 text-center mb-5">
+      <p class="font-semibold text-emerald-400 mb-2">Done!</p>
+      <p class="text-sm text-slate-300"><span class="text-2xl font-bold text-emerald-400" id="generate-count"></span> invoice(s) generated</p>
+    </div>
+    <form id="generate-form">
+      <div class="mb-5"><label class="form-label">Billing Month</label><input type="month" id="generate-period" required class="form-input text-sm w-full"></div>
+      <div id="generate-error" hidden class="text-xs text-red-400 mb-4"></div>
+      <div class="flex gap-2">
+        <button type="button" id="generate-cancel" class="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm hover:bg-white/6 transition">Cancel</button>
+        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm" id="generate-submit-btn"><span>Generate Invoices</span></button>
+      </div>
+    </form>
+    <button type="button" id="generate-done" hidden class="btn-primary w-full rounded-xl py-2.5 text-sm"><span>Done</span></button>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/super-admin-billing.js' %}"></script>{% endblock %}

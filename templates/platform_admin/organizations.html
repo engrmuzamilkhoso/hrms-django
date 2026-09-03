@@ -1,0 +1,138 @@
+{% extends "partials/super_admin_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/super-admin/organizations/page.tsx.{% endcomment %}
+{% block title %}Organizations — Super Admin{% endblock %}
+{% block content %}
+<div class="page-header flex items-start justify-between">
+  <div>
+    <div class="flex items-center gap-2 mb-2">
+      <span class="h-2 w-2 rounded-full bg-amber-400 animate-pulse"></span>
+      <p class="text-xs font-semibold uppercase tracking-widest text-amber-400">Super Admin</p>
+    </div>
+    <h1>Organizations</h1>
+    <p>Manage tenant organizations — toggle access and assign plans.</p>
+  </div>
+  <button id="create-org-btn" class="btn-primary rounded-xl px-5 py-2.5 text-sm"><span>+ Create Organization</span></button>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-4 mb-8">
+  <div class="stat-card bg-gradient-to-br from-amber-500/15 to-orange-500/10 border-amber-500/20"><p class="text-xs uppercase text-slate-500">Total</p><p class="mt-3 text-4xl font-bold text-amber-400" id="s-total">—</p></div>
+  <div class="stat-card bg-gradient-to-br from-emerald-500/15 to-teal-500/10 border-emerald-500/20"><p class="text-xs uppercase text-slate-500">Active</p><p class="mt-3 text-4xl font-bold text-emerald-400" id="s-active">—</p></div>
+  <div class="stat-card bg-gradient-to-br from-rose-500/15 to-red-500/10 border-rose-500/20"><p class="text-xs uppercase text-slate-500">Inactive</p><p class="mt-3 text-4xl font-bold text-rose-400" id="s-inactive">—</p></div>
+  <div class="stat-card bg-gradient-to-br from-violet-500/15 to-indigo-500/10 border-violet-500/20"><p class="text-xs uppercase text-slate-500">Employees</p><p class="mt-3 text-4xl font-bold text-violet-400" id="s-employees">—</p></div>
+</div>
+
+<div class="flex flex-wrap gap-3 mb-5">
+  <input type="text" id="search-input" placeholder="Search by name or country…" class="form-input flex-1 min-w-48 text-sm">
+  <select id="plan-filter" class="form-select w-44 text-sm">
+    <option value="all">All Plans</option>
+    <option value="trial">Trial</option><option value="silver">Silver</option><option value="gold">Gold</option>
+    <option value="platinum">Platinum</option><option value="custom">Custom</option>
+  </select>
+  <select id="status-filter" class="form-select w-44 text-sm">
+    <option value="all">All Statuses</option>
+    <option value="active">Active</option><option value="trial">Trial</option>
+    <option value="inactive">Inactive</option><option value="suspended">Suspended</option>
+  </select>
+</div>
+
+<div class="overflow-x-auto rounded-xl border border-white/8">
+  <table class="data-table w-full">
+    <thead><tr><th>Organization</th><th>Country</th><th>Plan</th><th>User Limit</th><th>Monthly Fee</th><th class="text-right">Employees</th><th>Status</th><th>Joined</th><th>Actions</th></tr></thead>
+    <tbody id="orgs-tbody"><tr><td colspan="9" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
+  </table>
+</div>
+<p class="mt-3 text-xs text-slate-600" id="showing-count"></p>
+
+<!-- Create Organization Modal -->
+<div id="create-modal" hidden class="fixed inset-0 z-50 flex items-start justify-center p-4 overflow-y-auto">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+  <div class="modal-card relative w-full max-w-xl rounded-2xl mt-6 mb-6">
+    <div class="flex items-center justify-between px-6 py-4 border-b border-white/8">
+      <h3 class="text-base font-semibold text-slate-100">Create Organization</h3>
+      <button type="button" id="create-close" class="text-slate-500 hover:text-slate-300">&times;</button>
+    </div>
+    <div id="create-success" hidden class="p-6">
+      <div class="rounded-xl border border-emerald-500/25 bg-emerald-500/8 p-5 mb-5">
+        <p class="font-semibold text-emerald-400 mb-3">Organization Created</p>
+        <p class="text-sm text-slate-300 mb-3">Share these credentials with the admin:</p>
+        <div class="space-y-2">
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2"><span class="text-xs text-slate-400">Admin Email</span><span class="font-mono text-xs text-slate-200" id="success-email"></span></div>
+          <div class="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2"><span class="text-xs text-slate-400">Temp Password</span><span class="font-mono text-xs text-slate-200" id="success-password"></span></div>
+        </div>
+      </div>
+      <button type="button" id="create-done" class="btn-primary w-full rounded-xl py-2.5 text-sm"><span>Done</span></button>
+    </div>
+    <form id="create-form" class="p-6 space-y-4">
+      {% csrf_token %}
+      <div><label class="form-label">Organization Name *</label><input name="organization_name" required placeholder="Acme Corp" class="form-input text-sm"></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="form-label">Country Code</label><input name="country_code" value="PK" required class="form-input text-sm" maxlength="2"></div>
+        <div><label class="form-label">Industry</label><input name="industry" value="IT" required class="form-input text-sm"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="form-label">Currency</label><input name="default_currency" value="PKR" required class="form-input text-sm" maxlength="3"></div>
+        <div><label class="form-label">Timezone</label><input name="timezone" value="Asia/Karachi" required class="form-input text-sm"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="form-label">Admin Name *</label><input name="admin_name" required class="form-input text-sm"></div>
+        <div><label class="form-label">Admin Email *</label><input type="email" name="admin_email" required class="form-input text-sm"></div>
+      </div>
+      <div><label class="form-label">Password *</label><input type="password" name="password" required minlength="8" placeholder="Min. 8 characters" class="form-input text-sm"></div>
+      <div>
+        <label class="form-label">Plan</label>
+        <select name="plan_code" id="create-plan-select" class="form-select text-sm">
+          <option value="trial">Trial — Free (20 users)</option>
+          <option value="silver">Silver — $29/mo (30 users)</option>
+          <option value="gold">Gold — $79/mo (50 users)</option>
+          <option value="platinum">Platinum — $149/mo (100 users)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div id="custom-plan-fields" hidden class="grid grid-cols-2 gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+        <div><label class="form-label">User Limit *</label><input type="number" min="1" name="custom_user_limit" class="form-input text-sm"></div>
+        <div><label class="form-label">Monthly Price (USD) *</label><input type="number" min="0" step="0.01" name="custom_monthly_price" class="form-input text-sm"></div>
+      </div>
+      <div id="create-error" hidden class="text-sm text-red-400"></div>
+      <div class="flex gap-3 pt-1">
+        <button type="button" id="create-cancel" class="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm hover:bg-white/6 transition">Cancel</button>
+        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm" id="create-submit-btn"><span>Create Organization</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Change Plan Modal -->
+<div id="plan-modal" hidden class="fixed inset-0 z-50 flex items-center justify-center p-4">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="modal-card relative w-full max-w-md rounded-2xl p-6">
+    <div class="flex items-start justify-between mb-5">
+      <div><h3 class="text-base font-semibold text-slate-100">Change Plan</h3><p class="text-xs text-slate-500 mt-0.5" id="plan-modal-org-name"></p></div>
+      <button type="button" id="plan-modal-close" class="text-slate-500 hover:text-slate-300">&times;</button>
+    </div>
+    <form id="plan-form" class="space-y-4">
+      <input type="hidden" id="plan-org-id">
+      <div>
+        <label class="form-label">Plan</label>
+        <select id="plan-select" class="form-select text-sm">
+          <option value="trial">Trial — Free (20 users)</option>
+          <option value="silver">Silver — $29/mo (30 users)</option>
+          <option value="gold">Gold — $79/mo (50 users)</option>
+          <option value="platinum">Platinum — $149/mo (100 users)</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+      <div id="plan-custom-fields" hidden class="grid grid-cols-2 gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+        <div><label class="form-label">User Limit</label><input type="number" min="1" id="plan-limit" class="form-input text-sm"></div>
+        <div><label class="form-label">Monthly Price ($)</label><input type="number" min="0" step="0.01" id="plan-price" class="form-input text-sm"></div>
+      </div>
+      <div id="plan-error" hidden class="text-xs text-red-400"></div>
+      <div class="flex gap-2">
+        <button type="button" id="plan-cancel" class="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm hover:bg-white/6 transition">Cancel</button>
+        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm"><span>Apply Plan</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/super-admin-organizations.js' %}"></script>{% endblock %}

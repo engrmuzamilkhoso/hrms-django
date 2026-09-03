@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% comment %}Legacy/orphaned page, ported as-is from app/modules/page.tsx (static, no API calls).{% endcomment %}
+{% block title %}HRMS Module Control Center{% endblock %}
+{% block body %}
+<main class="min-h-screen bg-slate-950 px-6 py-10 text-slate-100">
+  <div class="mx-auto max-w-7xl">
+    <h1 class="text-3xl font-semibold">HRMS Module Control Center</h1>
+    <p class="mt-2 text-slate-400">Complete blueprint mapped into phased product modules.</p>
+
+    <div class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      {% for section in sections %}
+      <section class="rounded-2xl border border-slate-800 bg-slate-900/70 p-5">
+        <h2 class="text-lg font-semibold">{{ section.title }}</h2>
+        <ul class="mt-4 space-y-2 text-sm text-slate-300">
+          {% for item in section.items %}
+          <li class="rounded-lg border border-slate-800 bg-slate-950/70 px-3 py-2">{{ item }}</li>
+          {% endfor %}
+        </ul>
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+</main>
+{% endblock %}

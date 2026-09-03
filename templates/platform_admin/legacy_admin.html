@@ -1,0 +1,54 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/platform/admin/page.tsx.{% endcomment %}
+{% block title %}Legacy Admin{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Super Admin Dashboard</h1><p>Platform-level overview — organizations, billing, and system health.</p></div>
+
+<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Organizations</p><p class="mt-2 text-3xl font-bold text-cyan-300" id="stat-orgs">—</p></div>
+  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Active Orgs</p><p class="mt-2 text-3xl font-bold text-emerald-300" id="stat-active">—</p></div>
+  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Total Employees</p><p class="mt-2 text-3xl font-bold text-violet-300" id="stat-employees">—</p></div>
+  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Total Revenue</p><p class="mt-2 text-3xl font-bold text-amber-300" id="stat-revenue">—</p></div>
+</div>
+
+<div class="tab-bar" id="la-tab-bar">
+  <button class="tab-btn active" data-tab="orgs">Organizations</button>
+  <button class="tab-btn" data-tab="billing">Billing</button>
+  <button class="tab-btn" data-tab="health">System Health</button>
+</div>
+
+<!-- ORGS -->
+<div class="tab-panel mt-6" data-panel="orgs">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Organization</th><th class="pb-2 pr-4">Country</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Created</th></tr></thead>
+      <tbody id="orgs-tbody"><tr><td colspan="6" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- BILLING -->
+<div class="tab-panel mt-6" data-panel="billing" hidden>
+  <div class="flex items-end gap-3 mb-5">
+    <form id="generate-billing-form" class="flex gap-3 items-end">
+      {% csrf_token %}
+      <div><label class="form-label">Generate Bills for Period (YYYY-MM)</label><input name="period" pattern="\d{4}-\d{2}" placeholder="2026-06" required class="form-input mt-1"></div>
+      <button type="submit" class="btn-primary rounded-lg px-4 py-2 text-sm"><span>Generate</span></button>
+    </form>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm">
+      <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Period</th><th class="pb-2 pr-4">Org ID</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4 text-right">Amount</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Generated</th></tr></thead>
+      <tbody id="billing-tbody"><tr><td colspan="7" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- HEALTH -->
+<div class="tab-panel mt-6" data-panel="health" hidden>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" id="health-cards"></div>
+  <p class="text-sm text-slate-500 mt-4" id="health-empty" hidden>No health data available.</p>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/legacy-admin.js' %}"></script>{% endblock %}

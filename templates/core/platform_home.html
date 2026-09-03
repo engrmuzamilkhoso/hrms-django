@@ -1,0 +1,38 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% block title %}Dashboard — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p>Organization overview</p>
+</div>
+
+<div id="loading" class="flex items-center justify-center py-16">
+  <div class="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+</div>
+<div id="error-box" hidden class="rounded-lg border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-400"></div>
+
+<div id="content" hidden>
+  <div class="grid grid-cols-2 gap-4 sm:grid-cols-4 mb-6">
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Active Employees</p><p class="text-2xl font-bold text-white" id="stat-active">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Present Today</p><p class="text-2xl font-bold text-white" id="stat-present">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">On Leave Today</p><p class="text-2xl font-bold text-white" id="stat-on-leave">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Pending Leave Requests</p><p class="text-2xl font-bold text-white" id="stat-pending-leaves">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Pending Expenses</p><p class="text-2xl font-bold text-white" id="stat-pending-expenses">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">New Joiners (Month)</p><p class="text-2xl font-bold text-white" id="stat-new-joiners">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Exits (Month)</p><p class="text-2xl font-bold text-white" id="stat-exits">—</p></div>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Headcount by Department</p>
+      <ul id="dept-breakdown" class="divide-y divide-white/5"></ul>
+    </div>
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Recent Hires (30 days)</p>
+      <ul id="recent-hires" class="divide-y divide-white/5"></ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/org-dashboard.js' %}"></script>{% endblock %}

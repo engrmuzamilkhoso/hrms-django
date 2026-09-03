@@ -1,0 +1,38 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% block title %}My Dashboard — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>My Dashboard</h1>
+  <p id="emp-name" class="text-slate-400">Self-service overview</p>
+</div>
+
+<div id="loading" class="flex items-center justify-center py-16">
+  <div class="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+</div>
+<div id="error-box" hidden class="rounded-lg border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-400"></div>
+
+<div id="content" hidden>
+  <p class="text-sm text-slate-500 mb-4"><span id="emp-code"></span> · <span id="emp-designation"></span></p>
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Today</p><p class="text-lg font-bold text-white" id="stat-today-status">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Present Days (Month)</p><p class="text-2xl font-bold text-white" id="stat-present-days">—</p></div>
+    <div class="stat-card"><p class="text-xs text-slate-500 mb-1">Total Days (Month)</p><p class="text-2xl font-bold text-white" id="stat-total-days">—</p></div>
+  </div>
+
+  <div class="grid gap-4 lg:grid-cols-2">
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Leave Balances</p>
+      <table class="data-table w-full">
+        <thead><tr><th>Type</th><th>Opening</th><th>Used</th><th>Remaining</th></tr></thead>
+        <tbody id="leave-balances"></tbody>
+      </table>
+    </div>
+    <div class="stat-card">
+      <p class="text-xs font-bold uppercase tracking-widest text-slate-500 mb-3">Upcoming Leaves</p>
+      <ul id="upcoming-leaves" class="divide-y divide-white/5"></ul>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/me-dashboard.js' %}"></script>{% endblock %}

@@ -1,0 +1,67 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/platform/onboarding-exit/page.tsx.{% endcomment %}
+{% block title %}Onboarding & Exit — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Onboarding & Exit</h1><p>Manage new hire onboarding checklists and employee exit workflows.</p></div>
+
+<div class="tab-bar" id="oe-tab-bar">
+  <button class="tab-btn active" data-tab="onboarding">Onboarding Tasks <span id="pending-count-badge" hidden class="ml-2 rounded-full bg-amber-500/30 px-1.5 py-0.5 text-[10px] text-amber-300"></span></button>
+  <button class="tab-btn" data-tab="exit">Exit Workflows</button>
+</div>
+
+<!-- ONBOARDING -->
+<div class="tab-panel mt-6" data-panel="onboarding">
+  <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div>
+      <h2 class="font-semibold mb-3">Pending Tasks (<span id="pending-count">0</span>)</h2>
+      <div id="pending-tasks-list" class="space-y-2 mb-6"></div>
+      <div id="completed-tasks-section" hidden>
+        <h2 class="font-semibold mb-3 text-slate-400">Completed (<span id="completed-count">0</span>)</h2>
+        <div id="completed-tasks-list" class="space-y-2"></div>
+      </div>
+    </div>
+    <form id="task-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+      {% csrf_token %}
+      <h2 class="font-semibold mb-4">Create Onboarding Task</h2>
+      <div class="space-y-3">
+        <div><label class="form-label">Employee</label>{% include "partials/_search_select.html" with id="ss-onboard-employee" name="onboard_employee_id" placeholder="Search employee…" %}</div>
+        <div><label class="form-label">Task Title</label><input name="title" required placeholder="e.g. Submit ID documents" class="form-input"></div>
+        <div><label class="form-label">Due Date</label><input name="due_date" type="date" class="form-input"></div>
+        <div><label class="form-label">Assigned To</label><input name="assigned_to" placeholder="Department / Team" class="form-input"></div>
+        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="task-save-btn"><span>Create Task</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- EXIT -->
+<div class="tab-panel mt-6" data-panel="exit" hidden>
+  <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div>
+      <h2 class="font-semibold mb-3">Exit Workflows (<span id="exit-count">0</span>)</h2>
+      <div id="exits-list" class="space-y-3"></div>
+    </div>
+    <form id="exit-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+      {% csrf_token %}
+      <h2 class="font-semibold mb-4">Initiate Exit</h2>
+      <div class="space-y-3">
+        <div><label class="form-label">Employee</label>{% include "partials/_search_select.html" with id="ss-exit-employee" name="exit_employee_id" placeholder="Search employee…" %}</div>
+        <div>
+          <label class="form-label">Exit Type</label>
+          <select name="exit_type" class="form-select">
+            <option value="resignation">Resignation</option>
+            <option value="termination">Termination</option>
+            <option value="retirement">Retirement</option>
+            <option value="contract_end">Contract End</option>
+          </select>
+        </div>
+        <div><label class="form-label">Last Working Date</label><input name="last_working_date" type="date" required class="form-input"></div>
+        <div><label class="form-label">Notice Period (days)</label><input name="notice_period_days" type="number" min="0" class="form-input"></div>
+        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="exit-save-btn"><span>Initiate Exit Workflow</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/onboarding-exit-home.js' %}"></script>{% endblock %}

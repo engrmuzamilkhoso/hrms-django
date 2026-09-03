@@ -1,0 +1,82 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Functional port of app/platform/accounting/page.tsx.{% endcomment %}
+{% block title %}Accounting Integration — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Accounting Integration</h1>
+  <p>Connect your HRMS payroll to Zoho Books, QuickBooks, Xero, or a custom ERP via webhook. Map salary components to ledger account codes.</p>
+</div>
+
+<div class="tab-bar" id="acc-tab-bar">
+  <button class="tab-btn active" data-tab="setup">Connection Setup</button>
+  <button class="tab-btn" data-tab="mappings">Ledger Mappings</button>
+  <button class="tab-btn" data-tab="push">Push Journal</button>
+</div>
+
+<!-- SETUP -->
+<div class="tab-panel mt-6" data-panel="setup">
+  <div class="grid gap-6 xl:grid-cols-[1fr_380px]">
+    <div>
+      <div id="integration-status"></div>
+      <div class="space-y-4">
+        <h3 class="font-semibold text-sm text-slate-400 uppercase tracking-wide">How it works</h3>
+        <div class="space-y-2 text-sm text-slate-400">
+          <p>1. Configure the webhook endpoint of your accounting system.</p>
+          <p>2. Map each HRMS payroll component to a ledger account code.</p>
+          <p>3. After approving a payroll run, push the journal entry with one click.</p>
+          <p>4. The system sends a structured JSON payload — your accounting system records the entry automatically.</p>
+        </div>
+      </div>
+    </div>
+
+    <form id="setup-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit space-y-4">
+      {% csrf_token %}
+      <h2 class="font-semibold">Configure Connection</h2>
+      <div>
+        <label class="form-label">Accounting System</label>
+        <select name="provider" class="form-select">
+          <option value="zoho">Zoho Books</option>
+          <option value="quickbooks">QuickBooks</option>
+          <option value="xero">Xero</option>
+          <option value="custom">Custom ERP / Webhook</option>
+        </select>
+      </div>
+      <div><label class="form-label">Webhook / API Endpoint URL *</label><input name="endpoint_url" type="url" required placeholder="https://api.example.com/hrms-journal" class="form-input"></div>
+      <div>
+        <label class="form-label">Authentication Type</label>
+        <select name="auth_type" class="form-select">
+          <option value="bearer">Bearer Token</option>
+          <option value="api_key">API Key (X-API-Key header)</option>
+          <option value="basic">Basic Auth</option>
+        </select>
+      </div>
+      <div><label class="form-label">Secret / Token</label><input name="secret_ref" type="password" placeholder="Leave blank to keep existing" class="form-input"></div>
+      <button type="submit" class="w-full btn-primary rounded-lg py-2.5 text-sm" id="setup-save-btn"><span>Save Integration</span></button>
+    </form>
+  </div>
+</div>
+
+<!-- MAPPINGS -->
+<div class="tab-panel mt-6" data-panel="mappings" hidden>
+  <form id="mappings-form">
+    {% csrf_token %}
+    <p class="text-sm text-slate-500 mb-4">Map each payroll component to your chart of accounts. Leave the ledger code blank to exclude a component.</p>
+    <div class="overflow-x-auto rounded-xl border border-white/8">
+      <table class="data-table w-full">
+        <thead><tr><th>HRMS Component</th><th>Ledger Account Code</th><th>Ledger Account Name</th></tr></thead>
+        <tbody id="mappings-tbody"></tbody>
+      </table>
+    </div>
+    <div class="mt-4"><button type="submit" class="btn-primary rounded-lg px-5 py-2 text-sm" id="mappings-save-btn"><span>Save Mappings</span></button></div>
+  </form>
+</div>
+
+<!-- PUSH -->
+<div class="tab-panel mt-6" data-panel="push" hidden>
+  <p class="text-sm text-slate-500 mb-4">Select an approved payroll run to push its journal entry to the accounting system.</p>
+  <div id="push-integration-warning" hidden class="rounded-xl border border-amber-500/20 bg-amber-500/6 p-4 text-sm text-amber-300 mb-4">Configure the integration in the Setup tab first.</div>
+  <div id="push-runs-list"></div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/accounting-integration.js' %}"></script>{% endblock %}

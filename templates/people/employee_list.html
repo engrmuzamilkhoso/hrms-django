@@ -1,0 +1,109 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Port of saas-hrms-frontend/app/dashboard/employees/page.tsx.{% endcomment %}
+{% block title %}Employees — WorkForce HRMS{% endblock %}
+{% block content %}
+<div id="employees-root">
+
+  <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-widest text-violet-400 mb-1">People</p>
+      <div class="flex items-center gap-3">
+        <h1 class="text-2xl font-bold text-white">Employees</h1>
+        <span id="plan-badge" hidden></span>
+      </div>
+      <p class="mt-1 text-sm text-slate-500" id="employees-subtitle">Manage your workforce</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="{% url 'people:employee_import' %}" class="btn-secondary rounded-xl px-4 py-2.5 text-sm">Import CSV</a>
+      <button id="add-employee-btn" class="btn-primary rounded-xl px-4 py-2.5 text-sm flex items-center gap-2">
+        <span>+ Add Employee</span>
+        <span id="add-btn-badge" hidden class="rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold"></span>
+      </button>
+    </div>
+  </div>
+
+  <div id="limit-banner" hidden></div>
+
+  <form id="search-form" class="mb-6 flex gap-3">
+    <div class="relative flex-1 max-w-sm">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input id="search-input" type="text" placeholder="Search name, email, code…"
+        class="w-full rounded-xl border border-white/10 bg-white/5 py-2.5 pl-10 pr-4 text-sm placeholder-slate-600 focus:border-violet-500/50 focus:outline-none focus:bg-white/7">
+    </div>
+    <button type="submit" class="btn-primary rounded-xl px-5 py-2.5 text-sm"><span>Search</span></button>
+  </form>
+
+  <div id="error-box" hidden class="mb-6 rounded-lg border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-400"></div>
+
+  <div id="loading-spinner" class="flex items-center justify-center py-20">
+    <div class="h-8 w-8 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div>
+  </div>
+
+  <div id="empty-state" hidden class="rounded-2xl border border-white/8 bg-white/3 p-16 text-center">
+    <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-violet-500/10">
+      <svg class="h-7 w-7 text-violet-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+      </svg>
+    </div>
+    <p class="text-slate-400 mb-4">No employees found</p>
+    <button id="empty-add-btn" class="btn-primary inline-block rounded-xl px-5 py-2.5 text-sm"><span>Add First Employee</span></button>
+  </div>
+
+  <div id="table-wrap" hidden>
+    <div class="overflow-x-auto rounded-2xl border border-white/8">
+      <table class="data-table w-full">
+        <thead>
+          <tr><th>Code</th><th>Name</th><th>Email</th><th>Designation</th><th>Department</th><th>Status</th><th>Hire Date</th><th></th></tr>
+        </thead>
+        <tbody id="employees-tbody"></tbody>
+      </table>
+    </div>
+    <div id="pagination" hidden class="mt-5 flex items-center justify-center gap-3">
+      <button id="prev-btn" class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm disabled:opacity-40 hover:bg-white/8 transition">← Prev</button>
+      <span id="page-label" class="text-sm text-slate-400"></span>
+      <button id="next-btn" class="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm disabled:opacity-40 hover:bg-white/8 transition">Next →</button>
+    </div>
+  </div>
+
+  <div id="paywall-modal" hidden class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <div id="paywall-backdrop" class="absolute inset-0 bg-black/70 backdrop-blur-sm"></div>
+    <div class="relative w-full max-w-md glass rounded-2xl p-8 shadow-2xl animate-fade-up text-center">
+      <div class="mb-5 flex justify-center">
+        <div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/30 to-orange-500/20 border border-amber-500/30">
+          <svg class="h-8 w-8 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+        </div>
+      </div>
+      <h2 class="text-xl font-bold text-slate-100 mb-2">Trial Limit Reached</h2>
+      <p class="text-sm text-slate-400 mb-1">Your organization has used all <span class="font-semibold text-amber-300" id="paywall-limit"></span> trial employees.</p>
+      <p class="text-sm text-slate-500 mb-6">Upgrade to a paid plan to add unlimited team members and unlock all features.</p>
+      <div class="grid gap-3 text-left mb-6">
+        <div class="rounded-xl border border-blue-500/20 bg-blue-500/8 px-4 py-3 flex items-center justify-between">
+          <div><p class="text-sm font-semibold text-blue-300">Starter</p><p class="text-xs text-slate-500 mt-0.5">Up to 25 employees · Core HR</p></div>
+          <p class="text-sm font-bold text-slate-200 shrink-0 ml-4">$29/mo</p>
+        </div>
+        <div class="rounded-xl border border-violet-500/20 bg-violet-500/8 px-4 py-3 flex items-center justify-between">
+          <div><p class="text-sm font-semibold text-violet-300">Growth</p><p class="text-xs text-slate-500 mt-0.5">Up to 100 employees · Payroll &amp; analytics</p></div>
+          <p class="text-sm font-bold text-slate-200 shrink-0 ml-4">$79/mo</p>
+        </div>
+        <div class="rounded-xl border border-amber-500/20 bg-amber-500/8 px-4 py-3 flex items-center justify-between">
+          <div><p class="text-sm font-semibold text-amber-300">Enterprise</p><p class="text-xs text-slate-500 mt-0.5">Unlimited · Dedicated support &amp; SLA</p></div>
+          <p class="text-sm font-bold text-slate-200 shrink-0 ml-4">Custom</p>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button id="paywall-later-btn" class="flex-1 rounded-xl border border-white/10 py-2.5 text-sm text-slate-400 hover:bg-white/5 transition">Maybe Later</button>
+        <button id="paywall-contact-btn" class="btn-primary flex-1 rounded-xl py-2.5 text-sm"><span>Contact Sales</span></button>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'js/pages/employee-list.js' %}"></script>
+{% endblock %}
