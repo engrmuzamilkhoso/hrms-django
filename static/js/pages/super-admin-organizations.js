@@ -5,6 +5,17 @@
     return d.innerHTML;
   }
 
+  const PLAN_DEFS = [
+    { code: "trial", label: "Trial", users: 20, price: "Free", color: "text-cyan-300", border: "border-cyan-500/40", activeBg: "bg-cyan-500/10", badge: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30" },
+    { code: "silver", label: "Silver", users: 30, price: "$29/mo", color: "text-slate-300", border: "border-slate-400/40", activeBg: "bg-slate-500/10", badge: "bg-slate-500/20 text-slate-300 border-slate-400/30" },
+    { code: "gold", label: "Gold", users: 50, price: "$79/mo", color: "text-amber-300", border: "border-amber-500/40", activeBg: "bg-amber-500/10", badge: "bg-amber-500/20 text-amber-300 border-amber-500/30" },
+    { code: "platinum", label: "Platinum", users: 100, price: "$149/mo", color: "text-violet-300", border: "border-violet-500/40", activeBg: "bg-violet-500/10", badge: "bg-violet-500/20 text-violet-300 border-violet-500/30" },
+    { code: "custom", label: "Custom", users: null, price: "Custom", color: "text-rose-300", border: "border-rose-500/40", activeBg: "bg-rose-500/10", badge: "bg-rose-500/20 text-rose-300 border-rose-500/30" },
+  ];
+  const planDef = (code) => {
+    const normalized = code === "beta_free" || code === "free" ? "trial" : code;
+    return PLAN_DEFS.find((p) => p.code === normalized) || PLAN_DEFS[0];
+  };
   const PLAN_LABEL = { trial: "Trial", silver: "Silver", gold: "Gold", platinum: "Platinum", custom: "Custom" };
   const PLAN_PRICE = { trial: "Free", silver: "$29/mo", gold: "$79/mo", platinum: "$149/mo" };
   const PLAN_BADGE = {
@@ -14,6 +25,29 @@
     platinum: "border-violet-500/30 bg-violet-500/20 text-violet-300",
     custom: "border-rose-500/30 bg-rose-500/20 text-rose-300",
   };
+
+  const CHECK_SVG = '<svg class="h-2.5 w-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>';
+
+  function renderPlanPicker(containerId, currentCode, onSelect) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = PLAN_DEFS.map(
+      (plan) => `
+      <button type="button" data-plan="${plan.code}" class="plan-picker-btn flex items-center justify-between rounded-xl border px-4 py-3 text-left transition ${
+        currentCode === plan.code ? `${plan.border} ${plan.activeBg}` : "border-white/8 bg-white/2 hover:border-white/15 hover:bg-white/4"
+      }">
+        <div class="flex items-center gap-3">
+          ${
+            currentCode === plan.code
+              ? `<span class="flex h-4 w-4 items-center justify-center rounded-full bg-violet-500">${CHECK_SVG}</span>`
+              : '<span class="flex h-4 w-4 items-center justify-center rounded-full border border-white/20"></span>'
+          }
+          <div><span class="text-sm font-semibold ${plan.color}">${plan.label}</span><span class="ml-2 text-xs text-slate-500">${plan.users != null ? `${plan.users} users` : "Custom limit"}</span></div>
+        </div>
+        <span class="rounded-full border px-2.5 py-0.5 text-[10px] font-semibold ${plan.badge}">${plan.price}</span>
+      </button>`
+    ).join("");
+    container.querySelectorAll(".plan-picker-btn").forEach((btn) => btn.addEventListener("click", () => onSelect(btn.dataset.plan)));
+  }
   const STATUS_META = {
     active: { dot: "bg-emerald-400", text: "text-emerald-400" },
     inactive: { dot: "bg-slate-500", text: "text-slate-400" },
@@ -117,16 +151,22 @@
     );
   }
 
+  function selectChangePlan(code) {
+    document.getElementById("plan-select-value").value = code;
+    document.getElementById("plan-custom-fields").hidden = code !== "custom";
+    document.getElementById("plan-apply-label").textContent = `Apply ${planDef(code).label} Plan`;
+    renderPlanPicker("change-plan-picker", code, selectChangePlan);
+  }
+
   function openPlanModal(orgId) {
     const org = orgs.find((o) => o.id === orgId);
     if (!org) return;
     document.getElementById("plan-org-id").value = org.id;
     document.getElementById("plan-modal-org-name").textContent = org.name;
     const code = org.plan_code || "trial";
-    document.getElementById("plan-select").value = code;
+    selectChangePlan(code);
     document.getElementById("plan-limit").value = code === "custom" ? org.trial_user_limit || "" : "";
     document.getElementById("plan-price").value = code === "custom" ? org.custom_monthly_price || "" : "";
-    document.getElementById("plan-custom-fields").hidden = code !== "custom";
     document.getElementById("plan-error").hidden = true;
     document.getElementById("plan-modal").hidden = false;
   }
@@ -139,12 +179,18 @@
 
     // Create org modal
     const createModal = document.getElementById("create-modal");
+    function selectCreatePlan(code) {
+      document.getElementById("create-plan-code").value = code;
+      document.getElementById("custom-plan-fields").hidden = code !== "custom";
+      document.getElementById("create-submit-label").textContent = `Create ${planDef(code).label} Organization`;
+      renderPlanPicker("create-plan-picker", code, selectCreatePlan);
+    }
     document.getElementById("create-org-btn").addEventListener("click", () => {
       document.getElementById("create-form").reset();
       document.getElementById("create-form").hidden = false;
       document.getElementById("create-success").hidden = true;
       document.getElementById("create-error").hidden = true;
-      document.getElementById("custom-plan-fields").hidden = true;
+      selectCreatePlan("trial");
       createModal.hidden = false;
     });
     document.getElementById("create-close").addEventListener("click", () => (createModal.hidden = true));
@@ -152,9 +198,6 @@
     document.getElementById("create-done").addEventListener("click", () => {
       createModal.hidden = true;
       load();
-    });
-    document.getElementById("create-plan-select").addEventListener("change", (e) => {
-      document.getElementById("custom-plan-fields").hidden = e.target.value !== "custom";
     });
     document.getElementById("create-form").addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -178,7 +221,10 @@
         body.custom_monthly_price = parseFloat(fd.get("custom_monthly_price"));
       }
       const btn = document.getElementById("create-submit-btn");
+      const label = document.getElementById("create-submit-label");
+      const priorLabel = label.textContent;
       btn.disabled = true;
+      label.textContent = "Creating…";
       try {
         const res = await apiRequest("/platform/organizations", { method: "POST", body: JSON.stringify(body) });
         const data = unwrapData(res);
@@ -191,6 +237,7 @@
         errBox.textContent = err.message || "Failed to create organization.";
       } finally {
         btn.disabled = false;
+        label.textContent = priorLabel;
       }
     });
 
@@ -198,13 +245,10 @@
     const planModal = document.getElementById("plan-modal");
     document.getElementById("plan-modal-close").addEventListener("click", () => (planModal.hidden = true));
     document.getElementById("plan-cancel").addEventListener("click", () => (planModal.hidden = true));
-    document.getElementById("plan-select").addEventListener("change", (e) => {
-      document.getElementById("plan-custom-fields").hidden = e.target.value !== "custom";
-    });
     document.getElementById("plan-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const id = Number(document.getElementById("plan-org-id").value);
-      const pickedPlan = document.getElementById("plan-select").value;
+      const pickedPlan = document.getElementById("plan-select-value").value;
       const errBox = document.getElementById("plan-error");
       errBox.hidden = true;
 
@@ -225,6 +269,11 @@
         body.trial_user_limit = limit;
         body.custom_monthly_price = price;
       }
+      const applyBtn = document.getElementById("plan-apply-btn");
+      const applyLabel = document.getElementById("plan-apply-label");
+      const priorApplyLabel = applyLabel.textContent;
+      applyBtn.disabled = true;
+      applyLabel.textContent = "Saving…";
       try {
         const res = await apiRequest(`/platform/organizations/${id}`, { method: "PATCH", body: JSON.stringify(body) });
         const updated = unwrapData(res);
@@ -236,6 +285,9 @@
       } catch (err) {
         errBox.hidden = false;
         errBox.textContent = err.message || "Failed to update plan.";
+      } finally {
+        applyBtn.disabled = false;
+        applyLabel.textContent = priorApplyLabel;
       }
     });
   });

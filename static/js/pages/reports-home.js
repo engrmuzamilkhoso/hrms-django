@@ -7,7 +7,7 @@
   const fmt = (n) => (n != null ? Number(n).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 }) : "—");
 
   function statCard(label, value, color) {
-    return `<div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="text-xs text-slate-400 uppercase tracking-wide">${esc(label)}</p><p class="mt-2 text-3xl font-bold ${color}">${value == null ? "—" : esc(value)}</p></div>`;
+    return `<div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="text-xs text-slate-400 uppercase tracking-wide">${esc(label)}</p><p class="mt-2 text-3xl font-bold ${color}">${value == null ? "—" : esc(value)}</p></div>`;
   }
 
   function switchTab(tab) {
@@ -46,7 +46,7 @@
         tbody.innerHTML = "";
         h.by_department.forEach((d) => {
           const tr = document.createElement("tr");
-          tr.className = "border-b border-white/5";
+          tr.className = "border-b border-slate-800/50";
           tr.innerHTML = `<td class="py-2 pr-6">${esc(d.department)}</td><td class="py-2 pr-6">${d.count}</td><td class="py-2">${d.percentage ? `${d.percentage}%` : "—"}</td>`;
           tbody.appendChild(tr);
         });
@@ -72,7 +72,7 @@
         tbody.innerHTML = "";
         a.by_department.forEach((d) => {
           const tr = document.createElement("tr");
-          tr.className = "border-b border-white/5";
+          tr.className = "border-b border-slate-800/50";
           tr.innerHTML = `<td class="py-2 pr-6">${esc(d.department)}</td><td class="py-2 pr-6">${d.exits}</td><td class="py-2">${d.rate ? `${d.rate}%` : "—"}</td>`;
           tbody.appendChild(tr);
         });
@@ -102,7 +102,7 @@
       const rows = payrollData
         .map(
           (row) => `
-        <tr class="border-b border-white/5 hover:bg-white/3">
+        <tr class="border-b border-slate-800/50 hover:bg-slate-900/30">
           <td class="py-2.5 pr-4">${row.employee_name ? esc(row.employee_name) : `Emp #${row.employee_id ?? ""}`}</td>
           <td class="py-2.5 pr-4 text-slate-400">${row.department ? esc(row.department) : "—"}</td>
           <td class="py-2.5 pr-4 text-right">${fmt(row.gross)}</td>
@@ -114,10 +114,10 @@
       container.innerHTML = `
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
-            <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Employee</th><th class="pb-2 pr-4">Department</th><th class="pb-2 pr-4 text-right">Gross</th><th class="pb-2 pr-4 text-right">Deductions</th><th class="pb-2 text-right">Net</th></tr></thead>
+            <thead><tr class="border-b border-slate-800 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Employee</th><th class="pb-2 pr-4">Department</th><th class="pb-2 pr-4 text-right">Gross</th><th class="pb-2 pr-4 text-right">Deductions</th><th class="pb-2 text-right">Net</th></tr></thead>
             <tbody>
               ${rows}
-              <tr class="border-t border-white/10 font-semibold">
+              <tr class="border-t border-slate-700 font-semibold">
                 <td class="py-2.5 pr-4 text-slate-300">Total</td><td></td>
                 <td class="py-2.5 pr-4 text-right">${fmt(totalGross)}</td>
                 <td class="py-2.5 pr-4 text-right text-rose-300">${fmt(totalDed)}</td>

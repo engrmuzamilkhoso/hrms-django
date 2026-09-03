@@ -53,11 +53,11 @@
       const stageChips = PIPELINE_STAGES.slice(0, -2)
         .map((s) => {
           const count = jobCandidates.filter((c) => c.stage === s).length;
-          return count > 0 ? `<span class="rounded bg-white/8 px-1.5 py-0.5">${esc(s)}: ${count}</span>` : "";
+          return count > 0 ? `<span class="rounded bg-slate-800 px-1.5 py-0.5">${esc(s)}: ${count}</span>` : "";
         })
         .join("");
       const div = document.createElement("div");
-      div.className = "rounded-xl border border-white/8 bg-white/3 p-5";
+      div.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-5";
       div.innerHTML = `
         <div class="flex items-start justify-between">
           <div>
@@ -65,7 +65,7 @@
             <p class="mt-1 text-sm text-slate-400 line-clamp-2">${esc(job.job_description)}</p>
           </div>
           <div class="flex flex-col items-end gap-2 ml-4">
-            <span class="rounded-full px-2 py-0.5 text-xs font-medium ${job.status === "open" ? "bg-emerald-500/20 text-emerald-300" : "bg-white/8 text-slate-400"}">${esc(job.status)}</span>
+            <span class="rounded-full px-2 py-0.5 text-xs font-medium ${job.status === "open" ? "bg-emerald-500/20 text-emerald-300" : "bg-slate-700 text-slate-400"}">${esc(job.status)}</span>
             <span class="form-label">${job.openings} opening${job.openings !== 1 ? "s" : ""}</span>
             <div class="flex gap-2">
               <button data-id="${job.id}" class="pipeline-link-btn text-xs text-cyan-400 hover:underline">Pipeline</button>
@@ -126,14 +126,14 @@
     PIPELINE_STAGES.forEach((stage) => {
       const stageCandidates = jobCandidates.filter((c) => c.stage === stage || (!c.stage && stage === "Applied"));
       const col = document.createElement("div");
-      col.className = `w-52 flex-shrink-0 rounded-xl border-t-2 ${STAGE_COLOR[stage] || "border-slate-600"} border-x border-b border-white/8 bg-white/3`;
+      col.className = `w-52 flex-shrink-0 rounded-xl border-t-2 ${STAGE_COLOR[stage] || "border-slate-600"} border-x border-b border-slate-800 bg-slate-900/60`;
       const cards = stageCandidates
         .map((c) => {
           const moveButtons = PIPELINE_STAGES.filter((s) => s !== stage && s !== "Rejected")
             .map((s) => `<button data-id="${c.id}" data-stage="${esc(s)}" class="move-stage-btn text-[10px] text-slate-400 hover:text-cyan-400 transition">→${esc(s.split(" ")[0])}</button>`)
             .join("");
           return `
-          <div class="rounded-lg border border-white/8 bg-black/20 p-3 mb-2">
+          <div class="rounded-lg border border-slate-800 bg-slate-950 p-3">
             <div class="flex items-start justify-between gap-1">
               <p class="text-xs font-medium leading-tight">${esc(c.full_name)}</p>
               ${scoreBadge(c.ai_score)}
@@ -149,11 +149,11 @@
         })
         .join("");
       col.innerHTML = `
-        <div class="px-3 py-2 border-b border-white/8">
+        <div class="px-3 py-2 border-b border-slate-800">
           <span class="text-xs font-semibold text-slate-300">${esc(stage)}</span>
-          <span class="ml-2 rounded-full bg-white/8 px-1.5 py-0.5 text-[10px] text-slate-400">${stageCandidates.length}</span>
+          <span class="ml-2 rounded-full bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-400">${stageCandidates.length}</span>
         </div>
-        <div class="p-2 min-h-[200px]">${cards || '<p class="text-center text-[11px] text-slate-700 pt-4">Empty</p>'}</div>`;
+        <div class="p-2 space-y-2 min-h-[200px]">${cards || '<p class="text-center text-[11px] text-slate-700 pt-4">Empty</p>'}</div>`;
       board.appendChild(col);
     });
 
@@ -200,7 +200,11 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const btn = document.getElementById("job-save-btn");
+      const spinner = document.getElementById("job-save-spinner");
+      const label = document.getElementById("job-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Creating…";
       try {
         await apiRequest("/job-postings", {
           method: "POST",
@@ -218,6 +222,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Create Job Posting";
       }
     });
 
@@ -225,7 +231,11 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const btn = document.getElementById("candidate-save-btn");
+      const spinner = document.getElementById("candidate-save-spinner");
+      const label = document.getElementById("candidate-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Adding…";
       try {
         await apiRequest("/candidates", {
           method: "POST",
@@ -243,6 +253,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Add to Pipeline";
       }
     });
   });

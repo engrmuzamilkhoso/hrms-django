@@ -1,11 +1,6 @@
 {% extends "partials/platform_shell.html" %}
 {% load static %}
-{% comment %}
-Functional port of saas-hrms-frontend/app/platform/leave/page.tsx (6 tabs).
-Simplified relative to the original's elaborate filter-chip/card-grid
-styling but same tabs, same data, same actions (apply/approve/reject/CRUD
-policies), same preserved API endpoints.
-{% endcomment %}
+{% comment %}Pixel-precise port of saas-hrms-frontend/app/platform/leave/page.tsx.{% endcomment %}
 {% block title %}Leave — WorkForce HRMS{% endblock %}
 {% block content %}
 <div class="page-header">
@@ -24,68 +19,16 @@ policies), same preserved API endpoints.
   {% endif %}
 </div>
 
-<!-- MY REQUESTS -->
-<div class="tab-panel mt-6" data-panel="requests" hidden>
-  <div id="requests-list"></div>
-</div>
-
-<!-- APPLY -->
-<div class="tab-panel mt-6" data-panel="apply" hidden>
-  <div class="max-w-lg form-section">
-    <form id="apply-form" class="space-y-4">
-      {% csrf_token %}
-      <div>
-        <label class="form-label">Leave Type</label>
-        <select name="leave_type_id" id="apply-leave-type" class="form-select"></select>
-      </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div><label class="form-label">From Date</label><input name="from_date" type="date" class="form-input" required></div>
-        <div><label class="form-label">To Date</label><input name="to_date" type="date" class="form-input" required></div>
-      </div>
-      <div>
-        <label class="form-label">Duration</label>
-        <select name="duration_type" class="form-select"><option value="full_day">Full Day</option><option value="half_day">Half Day</option></select>
-      </div>
-      <div><label class="form-label">Reason</label><textarea name="reason" rows="3" class="form-input resize-none"></textarea></div>
-      <div id="apply-error" hidden class="rounded-lg border border-red-500/30 bg-red-500/8 px-4 py-3 text-sm text-red-400"></div>
-      <button type="submit" class="btn-primary w-full rounded-xl py-3 text-sm" id="apply-submit-btn"><span>Submit Request</span></button>
-    </form>
-  </div>
-</div>
-
-<!-- APPROVALS -->
-<div class="tab-panel mt-6" data-panel="approvals" hidden>
-  <div id="approvals-list"></div>
-</div>
-
-<!-- POLICIES -->
-<div class="tab-panel mt-6" data-panel="policies" hidden>
-  <div class="grid gap-6 xl:grid-cols-[1fr_400px]">
-    <div id="policies-list"></div>
-    <form id="policy-form" class="form-section h-fit space-y-3">
-      {% csrf_token %}
-      <h3 class="font-semibold text-white">Add Leave Policy</h3>
-      <div><input name="name" placeholder="Policy Name (e.g. 2026-2027)" class="form-input" required></div>
-      <input name="description" placeholder="Description (optional)" class="form-input">
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="pro_rata"><span>Pro-rata allocation</span></label>
-      <label class="flex items-center gap-2 text-sm"><input type="checkbox" name="is_default"><span>Default policy</span></label>
-      <button type="submit" class="w-full btn-primary"><span>Add Policy</span></button>
-    </form>
-  </div>
-</div>
-
-<!-- BALANCES -->
-<div class="tab-panel mt-6" data-panel="balances" hidden>
-  <div class="max-w-sm mb-4">
-    {% include "partials/_search_select.html" with id="ss-balance-employee" name="balance_employee_id" placeholder="— Select employee —" options="[]" %}
-  </div>
-  <div id="balances-table"></div>
-</div>
-
-<!-- REPORT -->
-<div class="tab-panel mt-6" data-panel="report" hidden>
-  <div id="report-table"></div>
-</div>
-
+<div class="tab-panel" data-panel="requests" hidden><div id="requests-tab-root"></div></div>
+<div class="tab-panel" data-panel="apply" hidden><div id="apply-tab-root"></div></div>
+{% if nav_is_admin or nav_is_manager %}<div class="tab-panel" data-panel="approvals" hidden><div id="approvals-tab-root"></div></div>{% endif %}
+{% if nav_is_admin %}
+<div class="tab-panel" data-panel="policies" hidden><div id="policies-tab-root"></div></div>
+<div class="tab-panel" data-panel="balances" hidden><div id="balances-tab-root"></div></div>
+<div class="tab-panel" data-panel="report" hidden><div id="report-tab-root"></div></div>
+{% endif %}
 {% endblock %}
-{% block extra_js %}<script src="{% static 'js/pages/leave-home.js' %}"></script>{% endblock %}
+{% block extra_js %}
+<script>window.LEAVE_IS_ADMIN = {{ nav_is_admin|yesno:"true,false" }}; window.LEAVE_IS_MANAGER = {{ nav_is_manager|yesno:"true,false" }};</script>
+<script src="{% static 'js/pages/leave-home.js' %}"></script>
+{% endblock %}

@@ -6,10 +6,10 @@
 <div class="page-header"><h1>Super Admin Dashboard</h1><p>Platform-level overview — organizations, billing, and system health.</p></div>
 
 <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Organizations</p><p class="mt-2 text-3xl font-bold text-cyan-300" id="stat-orgs">—</p></div>
-  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Active Orgs</p><p class="mt-2 text-3xl font-bold text-emerald-300" id="stat-active">—</p></div>
-  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Total Employees</p><p class="mt-2 text-3xl font-bold text-violet-300" id="stat-employees">—</p></div>
-  <div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">Total Revenue</p><p class="mt-2 text-3xl font-bold text-amber-300" id="stat-revenue">—</p></div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="form-label">Organizations</p><p class="mt-2 text-3xl font-bold text-cyan-300" id="stat-orgs">—</p></div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="form-label">Active Orgs</p><p class="mt-2 text-3xl font-bold text-emerald-300" id="stat-active">—</p></div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="form-label">Total Employees</p><p class="mt-2 text-3xl font-bold text-violet-300" id="stat-employees">—</p></div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="form-label">Total Revenue</p><p class="mt-2 text-3xl font-bold text-amber-300" id="stat-revenue">—</p></div>
 </div>
 
 <div class="tab-bar" id="la-tab-bar">
@@ -22,7 +22,7 @@
 <div class="tab-panel mt-6" data-panel="orgs">
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Organization</th><th class="pb-2 pr-4">Country</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Created</th></tr></thead>
+      <thead><tr class="border-b border-slate-800 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Organization</th><th class="pb-2 pr-4">Country</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Created</th></tr></thead>
       <tbody id="orgs-tbody"><tr><td colspan="6" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
     </table>
   </div>
@@ -34,12 +34,12 @@
     <form id="generate-billing-form" class="flex gap-3 items-end">
       {% csrf_token %}
       <div><label class="form-label">Generate Bills for Period (YYYY-MM)</label><input name="period" pattern="\d{4}-\d{2}" placeholder="2026-06" required class="form-input mt-1"></div>
-      <button type="submit" class="btn-primary rounded-lg px-4 py-2 text-sm"><span>Generate</span></button>
+      <button type="submit" class="rounded bg-[#0156fc] text-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-[#0045d1]">Generate</button>
     </form>
   </div>
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
-      <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Period</th><th class="pb-2 pr-4">Org ID</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4 text-right">Amount</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Generated</th></tr></thead>
+      <thead><tr class="border-b border-slate-800 text-left text-xs text-slate-400"><th class="pb-2 pr-4">Period</th><th class="pb-2 pr-4">Org ID</th><th class="pb-2 pr-4">Plan</th><th class="pb-2 pr-4 text-right">Employees</th><th class="pb-2 pr-4 text-right">Amount</th><th class="pb-2 pr-4">Status</th><th class="pb-2">Generated</th></tr></thead>
       <tbody id="billing-tbody"><tr><td colspan="7" class="text-center text-slate-500 py-10">Loading…</td></tr></tbody>
     </table>
   </div>

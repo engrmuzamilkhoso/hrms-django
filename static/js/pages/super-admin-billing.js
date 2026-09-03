@@ -142,20 +142,44 @@
     );
   }
 
+  let currentInvoiceId = null;
+
   function openInvoiceModal(id) {
     const inv = invoices.find((i) => i.id === id);
     if (!inv) return;
+    currentInvoiceId = id;
     const orgName = inv.organization ? inv.organization.name : `Organization #${inv.organization_id}`;
     const planRow = planPrices.find((p) => p.plan_code === inv.plan_code);
     const planPrice = planRow ? planRow.monthly_price : 0;
     const sm = statusMeta(inv);
+
+    document.getElementById("invoice-modal-number").textContent = inv.invoice_number || `#${inv.id}`;
+    const statusEl = document.getElementById("invoice-modal-status");
+    statusEl.textContent = sm.label;
+    statusEl.className = `rounded-full border px-2.5 py-0.5 text-xs font-semibold ${sm.cls}`;
+
     document.getElementById("invoice-modal-body").innerHTML = `
-      <div class="flex items-center justify-between mb-5">
-        <div>
-          <p class="font-mono text-sm text-violet-300">${esc(inv.invoice_number || `#${inv.id}`)}</p>
-          <p class="text-xs text-slate-500 mt-0.5">${esc(orgName)} · Org ID ${inv.organization_id}</p>
+      <div class="flex items-start justify-between pb-5 border-b border-violet-500/30 mb-6">
+        <div><div class="text-xl font-extrabold text-violet-400 mb-0.5">WorkForce HRMS</div><p class="text-xs text-slate-500">SaaS HR Platform</p></div>
+        <div class="text-right">
+          <h2 class="text-lg font-bold text-slate-100">INVOICE</h2>
+          <p class="text-xs text-slate-400 mt-0.5">${esc(inv.invoice_number || `#${inv.id}`)}</p>
+          <span class="mt-2 inline-block rounded-full border px-2.5 py-0.5 text-xs font-semibold ${sm.cls}">${sm.label}</span>
         </div>
-        <span class="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${sm.cls}">${sm.label}</span>
+      </div>
+      <div class="grid grid-cols-2 gap-6 mb-6">
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">From</p>
+          <p class="text-sm font-bold text-slate-200">WorkForce HRMS Ltd.</p>
+          <p class="text-xs text-slate-400 mt-0.5">Platform Billing</p>
+          <p class="text-xs text-slate-400">billing@workforce-hrms.com</p>
+        </div>
+        <div>
+          <p class="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-2">Bill To</p>
+          <p class="text-sm font-bold text-slate-200">${esc(orgName)}</p>
+          ${inv.organization && inv.organization.country_code ? `<p class="text-xs text-slate-400 mt-0.5">Country: ${esc(inv.organization.country_code)}</p>` : ""}
+          <p class="text-xs text-slate-400">Org ID: ${inv.organization_id}</p>
+        </div>
       </div>
       <div class="grid grid-cols-3 gap-4 mb-6 rounded-xl border border-white/8 bg-white/3 p-4">
         <div><p class="text-[10px] uppercase text-slate-500">Billing Period</p><p class="mt-1 text-sm font-medium text-slate-200">${periodLabel(inv.billing_period)}</p></div>
@@ -163,21 +187,45 @@
         <div><p class="text-[10px] uppercase text-slate-500">Due Date</p><p class="mt-1 text-sm font-medium text-slate-200">${fmtDate(inv.due_date)}</p></div>
       </div>
       <table class="w-full text-sm mb-6 rounded-xl overflow-hidden border border-white/8">
-        <thead><tr class="bg-white/4"><th class="px-4 py-3 text-left text-[10px] uppercase text-slate-500">Description</th><th class="px-4 py-3 text-right text-[10px] uppercase text-slate-500">Unit Price</th><th class="px-4 py-3 text-right text-[10px] uppercase text-slate-500">Amount</th></tr></thead>
+        <thead><tr class="bg-white/4"><th class="px-4 py-3 text-left text-[10px] uppercase text-slate-500">Description</th><th class="px-4 py-3 text-right text-[10px] uppercase text-slate-500">Qty</th><th class="px-4 py-3 text-right text-[10px] uppercase text-slate-500">Unit Price</th><th class="px-4 py-3 text-right text-[10px] uppercase text-slate-500">Amount</th></tr></thead>
         <tbody><tr class="border-t border-white/5">
-          <td class="px-4 py-4"><p class="font-medium text-slate-200">${PLAN_LABEL[inv.plan_code] || inv.plan_code} Plan — Monthly Subscription</p><p class="text-xs text-slate-500 mt-0.5">${inv.active_employee_count} active employees</p></td>
+          <td class="px-4 py-4"><p class="font-medium text-slate-200">${PLAN_LABEL[inv.plan_code] || inv.plan_code} Plan — Monthly Subscription</p><p class="text-xs text-slate-500 mt-0.5">Flat monthly fee · ${inv.active_employee_count} active employees</p></td>
+          <td class="px-4 py-4 text-right text-slate-300">1</td>
           <td class="px-4 py-4 text-right text-slate-300">${esc(inv.currency)} ${fmt(planPrice)}</td>
           <td class="px-4 py-4 text-right font-semibold text-amber-300">${esc(inv.currency)} ${fmt(inv.amount)}</td>
         </tr></tbody>
       </table>
-      <div class="flex justify-end">
+      <div class="flex justify-end mb-6">
         <div class="w-64 space-y-2">
           <div class="flex justify-between text-sm text-slate-400"><span>Subtotal</span><span>${esc(inv.currency)} ${fmt(inv.amount)}</span></div>
+          <div class="flex justify-between text-sm text-slate-400"><span>Tax (0%)</span><span>${esc(inv.currency)} 0.00</span></div>
           <div class="flex justify-between pt-2 border-t border-violet-500/30 text-base font-bold text-slate-100"><span>Total Due</span><span class="text-amber-300">${esc(inv.currency)} ${fmt(inv.amount)}</span></div>
           ${inv.status === "paid" && inv.paid_at ? `<div class="flex justify-between text-xs text-emerald-400 pt-1"><span>Paid on</span><span>${fmtDate(inv.paid_at)}</span></div>` : ""}
         </div>
-      </div>`;
+      </div>
+      <div class="border-t border-white/8 pt-4 text-center text-xs text-slate-600">Thank you for your business. For billing queries, contact billing@workforce-hrms.com</div>`;
     document.getElementById("invoice-modal").hidden = false;
+  }
+
+  function handlePrintInvoice() {
+    const content = document.getElementById("invoice-modal-print-area").innerHTML;
+    if (!content) return;
+    const inv = invoices.find((i) => i.id === currentInvoiceId);
+    const win = window.open("", "_blank", "width=820,height=960");
+    if (!win) return;
+    win.document.write(`<!DOCTYPE html><html><head><title>Invoice ${esc(inv ? inv.invoice_number || inv.id : "")}</title><style>
+      *{box-sizing:border-box;margin:0;padding:0;}
+      body{font-family:'Segoe UI',Arial,sans-serif;font-size:13px;color:#1e293b;background:#fff;padding:40px;}
+      h2{font-size:20px;font-weight:700;}p{font-size:13px;}
+      table{width:100%;border-collapse:collapse;margin-bottom:20px;}
+      thead tr{background:#f1f5f9;}
+      th{padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-weight:600;}
+      td{padding:13px 14px;border-bottom:1px solid #f1f5f9;font-size:13px;}
+    </style></head><body>${content}</body></html>`);
+    win.document.close();
+    win.focus();
+    win.print();
+    win.close();
   }
 
   function renderPricing() {
@@ -278,15 +326,35 @@
     document.getElementById("period-filter").addEventListener("change", renderInvoices);
 
     document.getElementById("invoice-modal-close").addEventListener("click", () => (document.getElementById("invoice-modal").hidden = true));
+    document.getElementById("invoice-print-btn").addEventListener("click", handlePrintInvoice);
 
     const genModal = document.getElementById("generate-modal");
     const now = new Date();
+
+    function updateGeneratePreview() {
+      const period = document.getElementById("generate-period").value;
+      if (!period) {
+        document.getElementById("generate-preview-period").textContent = "—";
+        document.getElementById("generate-preview-due").textContent = "—";
+        document.getElementById("generate-preview-format").textContent = "—";
+        return;
+      }
+      document.getElementById("generate-preview-period").textContent = periodLabel(period);
+      const [y, m] = period.split("-");
+      const end = new Date(Number(y), Number(m), 0);
+      end.setDate(end.getDate() + 30);
+      document.getElementById("generate-preview-due").textContent = fmtDate(end.toISOString().split("T")[0]);
+      document.getElementById("generate-preview-format").textContent = `INV-${period.replace("-", "")}-****`;
+    }
+
     document.getElementById("generate-period").value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    document.getElementById("generate-period").addEventListener("input", updateGeneratePreview);
     document.getElementById("generate-btn").addEventListener("click", () => {
       document.getElementById("generate-form").hidden = false;
       document.getElementById("generate-result").hidden = true;
       document.getElementById("generate-done").hidden = true;
       document.getElementById("generate-error").hidden = true;
+      updateGeneratePreview();
       genModal.hidden = false;
     });
     document.getElementById("generate-close").addEventListener("click", () => (genModal.hidden = true));
@@ -301,11 +369,14 @@
       const errBox = document.getElementById("generate-error");
       errBox.hidden = true;
       const btn = document.getElementById("generate-submit-btn");
+      const label = document.getElementById("generate-submit-label");
       btn.disabled = true;
+      label.textContent = "Generating…";
       try {
         const res = await apiRequest(`/platform/billing/generate/${period}`, { method: "POST" });
         const data = unwrapData(res);
         document.getElementById("generate-count").textContent = data?.count ?? 0;
+        document.getElementById("generate-period-label").textContent = periodLabel(period);
         document.getElementById("generate-form").hidden = true;
         document.getElementById("generate-result").hidden = false;
         document.getElementById("generate-done").hidden = false;
@@ -314,6 +385,7 @@
         errBox.textContent = err.message || "Failed to generate invoices.";
       } finally {
         btn.disabled = false;
+        label.textContent = "Generate Invoices";
       }
     });
   });

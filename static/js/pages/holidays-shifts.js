@@ -1,3 +1,6 @@
+/**
+ * Pixel-precise port of app/platform/holidays-shifts/page.tsx.
+ */
 (function () {
   function esc(s) {
     const d = document.createElement("div");
@@ -33,7 +36,7 @@
     MONTHS.forEach((month, mi) => {
       const monthHolidays = holidays.filter((h) => new Date(h.holiday_date).getMonth() === mi);
       const card = document.createElement("div");
-      card.className = "rounded-xl border border-white/8 bg-white/3 p-4";
+      card.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-4";
       let body;
       if (monthHolidays.length === 0) {
         body = '<p class="text-xs text-slate-600">No holidays</p>';
@@ -106,7 +109,7 @@
     list.innerHTML = "";
     shifts.forEach((s) => {
       const card = document.createElement("div");
-      card.className = "rounded-xl border border-white/8 bg-white/3 p-4";
+      card.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-4";
       card.innerHTML = `
         <p class="font-semibold">${esc(s.name)}</p>
         <p class="text-sm text-slate-400 mt-1">${esc(s.start_time)} → ${esc(s.end_time)}</p>
@@ -157,7 +160,11 @@
         office_id: fd.get("office_id") ? Number(fd.get("office_id")) : null,
       };
       const btn = document.getElementById("holiday-save-btn");
+      const spinner = document.getElementById("holiday-save-spinner");
+      const label = document.getElementById("holiday-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Saving…";
       try {
         if (editHoliday) {
           await apiRequest(`/holidays/${editHoliday.id}`, { method: "PATCH", body: JSON.stringify(payload) });
@@ -173,6 +180,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Save";
       }
     });
 
@@ -180,7 +189,11 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const btn = document.getElementById("shift-save-btn");
+      const spinner = document.getElementById("shift-save-spinner");
+      const label = document.getElementById("shift-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Saving…";
       try {
         await apiRequest("/shifts", {
           method: "POST",
@@ -200,6 +213,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Create Shift";
       }
     });
 
@@ -213,7 +228,11 @@
       }
       const fd = new FormData(e.target);
       const btn = document.getElementById("swap-save-btn");
+      const spinner = document.getElementById("swap-save-spinner");
+      const label = document.getElementById("swap-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Submitting…";
       try {
         await apiRequest("/shift-swaps", {
           method: "POST",
@@ -225,6 +244,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Submit Swap Request";
       }
     });
   });

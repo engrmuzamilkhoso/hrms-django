@@ -78,25 +78,20 @@
         <div><label class="form-label">Admin Name *</label><input name="admin_name" required class="form-input text-sm"></div>
         <div><label class="form-label">Admin Email *</label><input type="email" name="admin_email" required class="form-input text-sm"></div>
       </div>
-      <div><label class="form-label">Password *</label><input type="password" name="password" required minlength="8" placeholder="Min. 8 characters" class="form-input text-sm"></div>
+      <div><label class="form-label">Password *</label><input type="password" name="password" required minlength="8" placeholder="Min. 8 characters" class="form-input text-sm"><p class="mt-1 text-xs text-slate-600">This will be shared with the admin. They can change it after login.</p></div>
       <div>
-        <label class="form-label">Plan</label>
-        <select name="plan_code" id="create-plan-select" class="form-select text-sm">
-          <option value="trial">Trial — Free (20 users)</option>
-          <option value="silver">Silver — $29/mo (30 users)</option>
-          <option value="gold">Gold — $79/mo (50 users)</option>
-          <option value="platinum">Platinum — $149/mo (100 users)</option>
-          <option value="custom">Custom</option>
-        </select>
-      </div>
-      <div id="custom-plan-fields" hidden class="grid grid-cols-2 gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
-        <div><label class="form-label">User Limit *</label><input type="number" min="1" name="custom_user_limit" class="form-input text-sm"></div>
-        <div><label class="form-label">Monthly Price (USD) *</label><input type="number" min="0" step="0.01" name="custom_monthly_price" class="form-input text-sm"></div>
+        <p class="text-[10px] font-bold uppercase tracking-widest text-violet-400 mb-3">Subscription Plan</p>
+        <input type="hidden" name="plan_code" id="create-plan-code" value="trial">
+        <div class="grid grid-cols-1 gap-2" id="create-plan-picker"></div>
+        <div id="custom-plan-fields" hidden class="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+          <div><label class="form-label">User Limit *</label><input type="number" min="1" name="custom_user_limit" class="form-input text-sm" placeholder="e.g. 75"></div>
+          <div><label class="form-label">Monthly Price (USD) *</label><input type="number" min="0" step="0.01" name="custom_monthly_price" class="form-input text-sm" placeholder="e.g. 199.00"></div>
+        </div>
       </div>
       <div id="create-error" hidden class="text-sm text-red-400"></div>
       <div class="flex gap-3 pt-1">
         <button type="button" id="create-cancel" class="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm hover:bg-white/6 transition">Cancel</button>
-        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm" id="create-submit-btn"><span>Create Organization</span></button>
+        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm" id="create-submit-btn"><span id="create-submit-label">Create Trial Organization</span></button>
       </div>
     </form>
   </div>
@@ -112,24 +107,16 @@
     </div>
     <form id="plan-form" class="space-y-4">
       <input type="hidden" id="plan-org-id">
-      <div>
-        <label class="form-label">Plan</label>
-        <select id="plan-select" class="form-select text-sm">
-          <option value="trial">Trial — Free (20 users)</option>
-          <option value="silver">Silver — $29/mo (30 users)</option>
-          <option value="gold">Gold — $79/mo (50 users)</option>
-          <option value="platinum">Platinum — $149/mo (100 users)</option>
-          <option value="custom">Custom</option>
-        </select>
-      </div>
-      <div id="plan-custom-fields" hidden class="grid grid-cols-2 gap-3 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
-        <div><label class="form-label">User Limit</label><input type="number" min="1" id="plan-limit" class="form-input text-sm"></div>
-        <div><label class="form-label">Monthly Price ($)</label><input type="number" min="0" step="0.01" id="plan-price" class="form-input text-sm"></div>
+      <input type="hidden" id="plan-select-value" value="trial">
+      <div class="grid grid-cols-1 gap-2 mb-4" id="change-plan-picker"></div>
+      <div id="plan-custom-fields" hidden class="grid grid-cols-2 gap-3 mb-4 rounded-xl border border-rose-500/20 bg-rose-500/5 p-4">
+        <div><label class="form-label">User Limit</label><input type="number" min="1" id="plan-limit" placeholder="e.g. 75" class="form-input text-sm"></div>
+        <div><label class="form-label">Monthly Price ($)</label><input type="number" min="0" step="0.01" id="plan-price" placeholder="e.g. 199.00" class="form-input text-sm"></div>
       </div>
       <div id="plan-error" hidden class="text-xs text-red-400"></div>
       <div class="flex gap-2">
         <button type="button" id="plan-cancel" class="flex-1 rounded-xl border border-white/10 bg-white/4 py-2.5 text-sm hover:bg-white/6 transition">Cancel</button>
-        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm"><span>Apply Plan</span></button>
+        <button type="submit" class="btn-primary flex-[2] rounded-xl py-2.5 text-sm" id="plan-apply-btn"><span id="plan-apply-label">Apply Trial Plan</span></button>
       </div>
     </form>
   </div>

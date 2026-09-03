@@ -54,7 +54,7 @@
       pendingList.innerHTML = "";
       pending.forEach((t) => {
         const div = document.createElement("div");
-        div.className = "rounded-lg border border-white/8 bg-white/3 p-4 flex items-start justify-between";
+        div.className = "rounded-lg border border-slate-800 bg-slate-900/60 p-4 flex items-start justify-between";
         div.innerHTML = `
           <div>
             <p class="font-medium text-sm">${esc(t.title)}</p>
@@ -87,7 +87,7 @@
       list.innerHTML = "";
       completed.forEach((t) => {
         const div = document.createElement("div");
-        div.className = "rounded-lg border border-white/6 bg-white/2 p-3 flex items-center justify-between opacity-60";
+        div.className = "rounded-lg border border-slate-800/50 bg-slate-900/30 p-3 flex items-center justify-between opacity-60";
         div.innerHTML = `<p class="text-sm line-through">${esc(t.title)}</p><span class="text-xs text-emerald-400">✓</span>`;
         list.appendChild(div);
       });
@@ -106,7 +106,7 @@
     list.innerHTML = "";
     exits.forEach((ex) => {
       const div = document.createElement("div");
-      div.className = "rounded-xl border border-white/8 bg-white/3 p-5";
+      div.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-5";
       const hasSettlement = !!settlements[ex.id];
       div.innerHTML = `
         <div class="flex items-start justify-between">
@@ -118,12 +118,12 @@
           <span class="rounded-full px-2 py-0.5 text-xs ${statusBadgeClass(ex.status)}">${ex.status || ""}</span>
         </div>
         <div class="mt-4 flex flex-wrap gap-2">
-          ${ex.status !== "finalized" ? `<button data-id="${ex.id}" class="calc-settlement-btn rounded border border-white/10 px-3 py-1.5 text-xs hover:border-cyan-500 transition">Calculate Settlement</button>` : ""}
-          ${hasSettlement && ex.status !== "finalized" ? `<button data-id="${ex.id}" class="finalize-settlement-btn rounded border border-emerald-700/50 px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-700/20 transition">Finalize Settlement</button>` : ""}
+          ${ex.status !== "finalized" ? `<button data-id="${ex.id}" class="calc-settlement-btn rounded border border-slate-700 px-3 py-1.5 text-xs hover:border-cyan-500">Calculate Settlement</button>` : ""}
+          ${hasSettlement && ex.status !== "finalized" ? `<button data-id="${ex.id}" class="finalize-settlement-btn rounded border border-emerald-700/50 px-3 py-1.5 text-xs text-emerald-300 hover:bg-emerald-700/20">Finalize Settlement</button>` : ""}
         </div>
         ${
           hasSettlement
-            ? `<div class="mt-3 rounded border border-white/8 bg-black/20 p-3 text-xs text-slate-300"><p class="font-semibold mb-1 text-slate-200">Settlement Summary</p><pre class="whitespace-pre-wrap">${esc(JSON.stringify(settlements[ex.id], null, 2))}</pre></div>`
+            ? `<div class="mt-3 rounded border border-slate-800 bg-slate-950 p-3 text-xs text-slate-300"><p class="font-semibold mb-1 text-slate-200">Settlement Summary</p><pre class="whitespace-pre-wrap">${esc(JSON.stringify(settlements[ex.id], null, 2))}</pre></div>`
             : ""
         }`;
       list.appendChild(div);
@@ -184,7 +184,11 @@
       }
       const fd = new FormData(e.target);
       const btn = document.getElementById("task-save-btn");
+      const spinner = document.getElementById("task-save-spinner");
+      const label = document.getElementById("task-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Creating…";
       try {
         await apiRequest("/onboarding-tasks", {
           method: "POST",
@@ -200,6 +204,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Create Task";
       }
     });
 
@@ -212,7 +218,11 @@
       }
       const fd = new FormData(e.target);
       const btn = document.getElementById("exit-save-btn");
+      const spinner = document.getElementById("exit-save-spinner");
+      const label = document.getElementById("exit-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Initiating…";
       try {
         await apiRequest("/exit-workflows", {
           method: "POST",
@@ -228,6 +238,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Initiate Exit Workflow";
       }
     });
   });

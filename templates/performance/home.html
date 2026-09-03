@@ -22,7 +22,7 @@
     </div>
   </div>
 
-  <form id="promote-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit space-y-4">
+  <form id="promote-form" class="rounded-xl border border-white/8 bg-slate-900/60 p-5 h-fit space-y-4">
     {% csrf_token %}
     <h2 class="font-semibold">Assign / Promote Employee</h2>
 
@@ -62,7 +62,7 @@
       <p class="mt-1 text-xs text-rose-400" id="err-effective_from" hidden>Effective date is required</p>
     </div>
 
-    <button type="submit" class="w-full btn-primary rounded-lg py-2.5 text-sm" id="promote-save-btn"><span>Record Promotion</span></button>
+    <button type="submit" class="w-full btn-primary disabled:opacity-50" id="promote-save-btn"><span class="inline-flex items-center gap-2"><span id="promote-save-spinner" class="btn-spinner" hidden></span><span id="promote-save-label">Record Promotion</span></span></button>
   </form>
 </div>
 {% endblock %}

@@ -350,7 +350,7 @@ class LeaveTypeDetailAPIView(EnvelopeAPIView):
         lt = get_object_or_404(LeaveType, pk=leave_type_id)
         return self.ok(LeaveTypeSerializer(lt).data)
 
-    def put(self, request, leave_type_id):
+    def patch(self, request, leave_type_id):
         lt = get_object_or_404(LeaveType, pk=leave_type_id)
         for field in [
             "name", "category", "affects_balance", "annual_quota", "carry_forward_enabled",
@@ -484,19 +484,28 @@ class HolidayDetailAPIView(EnvelopeAPIView):
 # ---------------------------------------------------------------------------
 class LeavePolicyListCreateAPIView(EnvelopeAPIView):
     def get(self, request):
-        qs = LeavePolicy.objects.filter(organization_id=request.user.organization_id).order_by("-id")
+        qs = (
+            LeavePolicy.objects.filter(organization_id=request.user.organization_id)
+            .prefetch_related("leave_types")
+            .order_by("-start_date", "name")
+        )
         return self.ok(LeavePolicySerializer(qs, many=True).data)
 
     def post(self, request):
         data = request.data
+        org_id = request.user.organization_id
+        if data.get("is_default"):
+            LeavePolicy.objects.filter(organization_id=org_id).update(is_default=False)
         policy = LeavePolicy.objects.create(
-            organization_id=request.user.organization_id,
+            organization_id=org_id,
             name=data.get("name"),
             description=data.get("description"),
             is_default=data.get("is_default", False),
             pro_rata=data.get("pro_rata", False),
             start_date=data.get("start_date") or None,
             end_date=data.get("end_date") or None,
+            previous_policy_id=data.get("previous_policy_id") or None,
+            status="active",
         )
         return self.ok(LeavePolicySerializer(policy).data, "Leave policy created", 201)
 
@@ -578,6 +587,8 @@ class LeaveReportBalancesAPIView(EnvelopeAPIView):
 class LeavePolicyDetailAPIView(EnvelopeAPIView):
     def patch(self, request, policy_id):
         policy = get_object_or_404(LeavePolicy, pk=policy_id)
+        if request.data.get("is_default"):
+            LeavePolicy.objects.filter(organization_id=policy.organization_id).exclude(pk=policy.id).update(is_default=False)
         for field in ["name", "description", "is_default", "pro_rata", "start_date", "end_date", "status"]:
             if field in request.data:
                 setattr(policy, field, request.data[field])
@@ -588,3 +599,126 @@ class LeavePolicyDetailAPIView(EnvelopeAPIView):
         policy = get_object_or_404(LeavePolicy, pk=policy_id)
         policy.delete()
         return self.ok(None, "Leave policy deleted")
+
+
+def _used_days(org_id, employee_id, leave_type_id, policy):
+    qs = LeaveRequest.objects.filter(
+        organization_id=org_id, employee_id=employee_id, leave_type_id=leave_type_id, status="approved"
+    )
+    if policy.start_date and policy.end_date:
+        qs = qs.filter(from_date__range=(policy.start_date, policy.end_date))
+    else:
+        qs = qs.filter(from_date__year=timezone.localdate().year)
+    from django.db.models import Sum
+
+    return float(qs.aggregate(total=Sum("requested_days"))["total"] or 0)
+
+
+def _carry_forward_preview_rows(org_id, policy):
+    from apps.people.models import Employee
+
+    employees = Employee.objects.filter(organization_id=org_id, leave_policy_id=policy.id)
+    carry_types = policy.leave_types.filter(carry_forward_enabled=True)
+    if not carry_types.exists() or not employees.exists():
+        return []
+
+    preview = []
+    for emp in employees:
+        balances = []
+        for lt in carry_types:
+            used = _used_days(org_id, emp.id, lt.id, policy)
+            allocated = float(lt.annual_quota)
+            remaining = max(0, allocated - used)
+            carry_max = float(lt.carry_forward_max) if lt.carry_forward_max else remaining
+            carry_days = min(remaining, carry_max)
+            if carry_days > 0:
+                balances.append(
+                    {
+                        "category": lt.category, "name": lt.name, "allocated": allocated, "used": used,
+                        "remaining": remaining, "carry_forward_days": carry_days,
+                        "carry_forward_max": float(lt.carry_forward_max) if lt.carry_forward_max else None,
+                    }
+                )
+        if balances:
+            preview.append({"employee_id": emp.id, "full_name": emp.full_name, "employee_code": emp.employee_code, "balances": balances})
+    return preview
+
+
+class LeavePolicyCarryForwardPreviewAPIView(EnvelopeAPIView):
+    def get(self, request, policy_id):
+        policy = get_object_or_404(LeavePolicy, pk=policy_id, organization_id=request.user.organization_id)
+        return self.ok(_carry_forward_preview_rows(request.user.organization_id, policy))
+
+
+class LeavePolicyRenewAPIView(EnvelopeAPIView):
+    @transaction.atomic
+    def post(self, request, policy_id):
+        from apps.people.models import Employee
+
+        old_policy = get_object_or_404(LeavePolicy, pk=policy_id, organization_id=request.user.organization_id)
+        data = request.data
+        name = data.get("name")
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
+        if not name or not start_date or not end_date:
+            return self.error(
+                "The given data was invalid.", 422,
+                errors={"name": ["required"], "start_date": ["required"], "end_date": ["required"]},
+            )
+
+        org_id = request.user.organization_id
+        user = request.user
+
+        new_policy = LeavePolicy.objects.create(
+            organization_id=org_id, name=name, description=old_policy.description,
+            is_default=old_policy.is_default, pro_rata=old_policy.pro_rata,
+            start_date=start_date, end_date=end_date, previous_policy_id=old_policy.id, status="active",
+        )
+
+        for lt in old_policy.leave_types.all():
+            LeaveType.objects.create(
+                organization_id=org_id, policy=new_policy, name=lt.name, category=lt.category,
+                affects_balance=lt.affects_balance, annual_quota=lt.annual_quota,
+                carry_forward_enabled=lt.carry_forward_enabled, carry_forward_max=lt.carry_forward_max,
+                carry_reset_date=lt.carry_reset_date, encashable=lt.encashable,
+                negative_balance_allowed=lt.negative_balance_allowed,
+                auto_approve_threshold_days=lt.auto_approve_threshold_days,
+            )
+
+        carry_forward_count = 0
+        if data.get("carry_forward"):
+            from .models import LeaveCarryForward
+
+            preview = _carry_forward_preview_rows(org_id, old_policy)
+            for row in preview:
+                for b in row["balances"]:
+                    _, created = LeaveCarryForward.objects.get_or_create(
+                        organization_id=org_id, employee_id=row["employee_id"], from_policy=old_policy,
+                        to_policy=new_policy, leave_type_category=b["category"] or "annual",
+                        defaults=dict(
+                            remaining_days=b["remaining"], carried_forward_days=b["carry_forward_days"],
+                            processed_at=timezone.now(), processed_by_user_id=user.id,
+                        ),
+                    )
+                    if created:
+                        carry_forward_count += 1
+
+        assigned_count = 0
+        if data.get("auto_assign"):
+            assigned_count = Employee.objects.filter(organization_id=org_id, leave_policy_id=old_policy.id).update(
+                leave_policy_id=new_policy.id
+            )
+
+        if old_policy.end_date and old_policy.end_date < timezone.localdate():
+            old_policy.status = "expired"
+            old_policy.save()
+
+        new_policy.refresh_from_db()
+        return self.ok(
+            {
+                "policy": LeavePolicySerializer(new_policy).data,
+                "carry_forward_count": carry_forward_count,
+                "assigned_employees": assigned_count,
+            },
+            "Policy renewed successfully", 201,
+        )

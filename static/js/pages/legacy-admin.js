@@ -50,7 +50,7 @@
     tbody.innerHTML = "";
     orgs.forEach((o) => {
       const tr = document.createElement("tr");
-      tr.className = "border-b border-white/5 hover:bg-white/3";
+      tr.className = "border-b border-slate-800/50 hover:bg-slate-900/30";
       tr.innerHTML = `
         <td class="py-3 pr-4 font-medium">${esc(o.name)}</td>
         <td class="py-3 pr-4 text-slate-400">${esc(o.country_code || "—")}</td>
@@ -72,7 +72,7 @@
     tbody.innerHTML = "";
     billing.forEach((b) => {
       const tr = document.createElement("tr");
-      tr.className = "border-b border-white/5 hover:bg-white/3";
+      tr.className = "border-b border-slate-800/50 hover:bg-slate-900/30";
       tr.innerHTML = `
         <td class="py-2.5 pr-4 font-mono text-xs">${esc(b.billing_period)}</td>
         <td class="py-2.5 pr-4">${b.organization_id}</td>
@@ -105,7 +105,7 @@
       { label: "Uptime", value: health.uptime ?? "—", color: "text-emerald-300" },
     ];
     cards.innerHTML = metrics
-      .map((m) => `<div class="rounded-xl border border-white/8 bg-white/3 p-5"><p class="form-label">${esc(m.label)}</p><p class="mt-2 text-2xl font-bold ${m.color}">${m.value == null ? "" : esc(m.value)}</p></div>`)
+      .map((m) => `<div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5"><p class="form-label">${esc(m.label)}</p><p class="mt-2 text-2xl font-bold ${m.color}">${m.value == null ? "" : esc(m.value)}</p></div>`)
       .join("");
   }
 

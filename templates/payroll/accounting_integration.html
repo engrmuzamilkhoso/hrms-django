@@ -30,7 +30,7 @@
       </div>
     </div>
 
-    <form id="setup-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit space-y-4">
+    <form id="setup-form" class="rounded-xl border border-white/8 bg-slate-900/60 p-5 h-fit space-y-4">
       {% csrf_token %}
       <h2 class="font-semibold">Configure Connection</h2>
       <div>
@@ -52,7 +52,7 @@
         </select>
       </div>
       <div><label class="form-label">Secret / Token</label><input name="secret_ref" type="password" placeholder="Leave blank to keep existing" class="form-input"></div>
-      <button type="submit" class="w-full btn-primary rounded-lg py-2.5 text-sm" id="setup-save-btn"><span>Save Integration</span></button>
+      <button type="submit" class="w-full btn-primary disabled:opacity-50" id="setup-save-btn"><span id="setup-save-label">Save Integration</span></button>
     </form>
   </div>
 </div>
@@ -68,7 +68,7 @@
         <tbody id="mappings-tbody"></tbody>
       </table>
     </div>
-    <div class="mt-4"><button type="submit" class="btn-primary rounded-lg px-5 py-2 text-sm" id="mappings-save-btn"><span>Save Mappings</span></button></div>
+    <div class="mt-4"><button type="submit" class="btn-primary disabled:opacity-50" id="mappings-save-btn"><span id="mappings-save-label">Save Mappings</span></button></div>
   </form>
 </div>
 

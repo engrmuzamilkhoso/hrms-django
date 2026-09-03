@@ -1,6 +1,12 @@
 {% extends "partials/platform_shell.html" %}
 {% load static %}
-{% comment %}Functional port of app/platform/payroll/page.tsx.{% endcomment %}
+{% comment %}
+Pixel-precise port of app/platform/payroll/page.tsx. The original's "Add
+Structure" form is missing an effective_from field despite the backend
+requiring one (always 422'd in the live app) - kept fixed here (added the
+field, styled to blend into the raw slate-* inline styling this form uses)
+rather than reintroducing that bug, per the plan's "fix only dead code" carve-out.
+{% endcomment %}
 {% block title %}Payroll — WorkForce HRMS{% endblock %}
 {% block content %}
 <div class="page-header"><h1>Payroll Engine</h1><p>Manage salary structures, run payroll, and configure taxation.</p></div>
@@ -19,13 +25,13 @@
       <h2 class="font-semibold mb-3">Payroll Runs</h2>
       <div id="runs-list" class="space-y-3"><p class="text-sm text-slate-500">Loading…</p></div>
     </div>
-    <form id="run-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+    <form id="run-form" class="rounded-xl border border-slate-800 bg-slate-900/60 p-5 h-fit">
       {% csrf_token %}
       <h2 class="font-semibold mb-4">Create Payroll Run</h2>
       <div class="space-y-3">
         <div><label class="form-label">Period Start</label><input name="period_start" type="date" required class="form-input"></div>
         <div><label class="form-label">Period End</label><input name="period_end" type="date" required class="form-input"></div>
-        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="run-save-btn"><span>Create Run</span></button>
+        <button type="submit" class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-white hover:bg-[#0045d1] disabled:opacity-60 flex items-center justify-center gap-2" id="run-save-btn"><span id="run-save-spinner" class="btn-spinner" hidden></span><span id="run-save-label">Create Run</span></button>
       </div>
     </form>
   </div>
@@ -34,36 +40,36 @@
 <!-- STRUCTURES -->
 <div class="tab-panel mt-6" data-panel="structures" hidden>
   <div class="grid gap-6 xl:grid-cols-2">
-    <div class="rounded-xl border border-white/8 bg-white/3 p-5">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
       <h2 class="font-semibold mb-3">Salary Structures</h2>
       <form id="structure-form" class="flex gap-2 mb-4 flex-wrap">
         {% csrf_token %}
-        <input name="name" placeholder="Structure name (e.g. Standard Monthly)" required class="flex-1 min-w-40 form-input">
-        <input name="effective_from" type="date" required class="form-input w-40" title="Effective From">
-        <button type="submit" class="btn-primary rounded-lg px-4 text-sm" id="structure-save-btn"><span>Add</span></button>
+        <input name="name" placeholder="Structure name (e.g. Standard Monthly)" required class="flex-1 min-w-40 rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
+        <input name="effective_from" type="date" required title="Effective From" class="rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm [color-scheme:dark]">
+        <button type="submit" class="rounded bg-[#0156fc] text-white px-4 py-2 text-sm font-semibold hover:bg-[#0045d1] disabled:opacity-60 inline-flex items-center gap-1" id="structure-save-btn"><span id="structure-save-spinner" class="btn-spinner" hidden></span><span id="structure-save-label">Add</span></button>
       </form>
       <div class="space-y-2" id="structures-list"></div>
     </div>
 
-    <div class="rounded-xl border border-white/8 bg-white/3 p-5">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
       <h2 class="font-semibold mb-3">Salary Components</h2>
       <form id="component-form" class="space-y-3 mb-4">
         {% csrf_token %}
-        <select name="salary_structure_id" required class="form-select" id="component-structure-select">
+        <select name="salary_structure_id" required class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm" id="component-structure-select">
           <option value="">Select structure</option>
         </select>
-        <input name="component_name" placeholder="Component name (e.g. Basic, HRA)" required class="form-input">
-        <select name="component_type" class="form-select">
+        <input name="component_name" placeholder="Component name (e.g. Basic, HRA)" required class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
+        <select name="component_type" class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
           <option value="earning">Earning</option>
           <option value="deduction">Deduction</option>
         </select>
-        <select name="calc_method" class="form-select">
+        <select name="calc_method" class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
           <option value="fixed">Fixed Amount</option>
           <option value="percent_of_basic">% of Basic</option>
           <option value="formula">Formula</option>
         </select>
-        <input name="default_amount" type="number" step="0.01" placeholder="Value (amount or %)" class="form-input">
-        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="component-save-btn"><span>Add Component</span></button>
+        <input name="default_amount" type="number" step="0.01" placeholder="Value (amount or %)" class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
+        <button type="submit" class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-white hover:bg-[#0045d1] disabled:opacity-60 flex items-center justify-center gap-2" id="component-save-btn"><span id="component-save-spinner" class="btn-spinner" hidden></span><span id="component-save-label">Add Component</span></button>
       </form>
       <div class="space-y-1 max-h-64 overflow-y-auto" id="components-list"></div>
     </div>
@@ -73,19 +79,19 @@
 <!-- TAX -->
 <div class="tab-panel mt-6" data-panel="tax" hidden>
   <div class="grid gap-6 xl:grid-cols-[340px_1fr]">
-    <div class="rounded-xl border border-white/8 bg-white/3 p-5">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
       <h2 class="font-semibold mb-3">Tax Rules</h2>
       <form id="tax-rule-form" class="space-y-3 mb-4">
         {% csrf_token %}
-        <input name="rule_name" placeholder="Rule name (e.g. Pakistan FBR 2025)" required class="form-input">
-        <input name="country_code" placeholder="Country code (e.g. PK, AE)" maxlength="2" required class="form-input uppercase">
+        <input name="rule_name" placeholder="Rule name (e.g. Pakistan FBR 2025)" required class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm">
+        <input name="country_code" placeholder="Country code (e.g. PK, AE)" maxlength="2" required class="w-full rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm uppercase">
         <div><label class="form-label">Effective From</label><input name="effective_from" type="date" required class="form-input"></div>
-        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="tax-rule-save-btn"><span>Create Rule</span></button>
+        <button type="submit" class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-white hover:bg-[#0045d1] disabled:opacity-60 flex items-center justify-center gap-2" id="tax-rule-save-btn"><span id="tax-rule-save-spinner" class="btn-spinner" hidden></span><span id="tax-rule-save-label">Create Rule</span></button>
       </form>
       <div class="space-y-2" id="tax-rules-list"></div>
     </div>
 
-    <div class="rounded-xl border border-white/8 bg-white/3 p-5" id="tax-brackets-panel">
+    <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-5" id="tax-brackets-panel">
       <p class="text-sm text-slate-500">Select a tax rule to manage brackets.</p>
     </div>
   </div>
@@ -98,10 +104,10 @@
       <h2 class="font-semibold mb-3">All Submissions</h2>
       <div class="space-y-2" id="expenses-list"><p class="text-sm text-slate-500">Loading…</p></div>
     </div>
-    <form id="expense-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit space-y-3">
+    <form id="expense-form" class="rounded-xl border border-white/8 bg-slate-900/60 p-5 h-fit space-y-3">
       {% csrf_token %}
       <h2 class="font-semibold">Submit Expense Claim</h2>
-      {% include "partials/_search_select.html" with id="ss-expense-employee" name="expense_employee_id" placeholder="Select employee…" %}
+      {% include "partials/_search_select.html" with id="ss-expense-employee" name="expense_employee_id" placeholder="Select employee…" search_placeholder="Type name or code…" %}
       <input name="description" required placeholder="Description" class="form-input">
       <select name="category" class="form-select">
         <option value="travel">Travel</option><option value="meals">Meals</option>
@@ -115,7 +121,7 @@
         </select>
       </div>
       <input name="expense_date" type="date" required class="form-input">
-      <button type="submit" class="w-full btn-primary rounded-lg py-2.5 text-sm" id="expense-save-btn"><span>Submit Claim</span></button>
+      <button type="submit" class="w-full btn-primary disabled:opacity-60" id="expense-save-btn"><span id="expense-save-label">Submit Claim</span></button>
     </form>
   </div>
 </div>

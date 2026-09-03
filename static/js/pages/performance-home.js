@@ -80,7 +80,11 @@
 
       const fd = new FormData(e.target);
       const btn = document.getElementById("promote-save-btn");
+      const spinner = document.getElementById("promote-save-spinner");
+      const label = document.getElementById("promote-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Processing…";
       try {
         await apiRequest("/designations/assign", {
           method: "POST",
@@ -103,6 +107,8 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Record Promotion";
       }
     });
   });

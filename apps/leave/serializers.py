@@ -57,9 +57,31 @@ class HolidaySerializer(serializers.ModelSerializer):
 
 
 class LeavePolicySerializer(serializers.ModelSerializer):
+    leave_types = LeaveTypeSerializer(many=True, read_only=True)
+    employees_count = serializers.SerializerMethodField()
+    computed_status = serializers.SerializerMethodField()
+
     class Meta:
         model = LeavePolicy
         fields = [
             "id", "organization_id", "name", "description", "is_default", "pro_rata",
             "start_date", "end_date", "previous_policy_id", "status", "created_at", "updated_at",
+            "leave_types", "employees_count", "computed_status",
         ]
+
+    def get_employees_count(self, obj):
+        from apps.people.models import Employee
+
+        return Employee.all_objects.filter(leave_policy_id=obj.id).count()
+
+    def get_computed_status(self, obj):
+        if not obj.start_date or not obj.end_date:
+            return "active"
+        from django.utils import timezone
+
+        today = timezone.localdate()
+        if today > obj.end_date:
+            return "expired"
+        if (obj.end_date - today).days <= 30:
+            return "expiring_soon"
+        return "active"

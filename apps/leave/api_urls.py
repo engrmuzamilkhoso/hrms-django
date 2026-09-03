@@ -16,6 +16,8 @@ urlpatterns = [
     path("leave-requests/<int:leave_request_id>/delegate", api.LeaveRequestDelegateAPIView.as_view()),
     path("leave-policies", api.LeavePolicyListCreateAPIView.as_view()),
     path("leave-policies/<int:policy_id>", api.LeavePolicyDetailAPIView.as_view()),
+    path("leave-policies/<int:policy_id>/renew", api.LeavePolicyRenewAPIView.as_view()),
+    path("leave-policies/<int:policy_id>/carry-forward-preview", api.LeavePolicyCarryForwardPreviewAPIView.as_view()),
     path("leave-reports/balances", api.LeaveReportBalancesAPIView.as_view()),
     path("holidays", api.HolidayListCreateAPIView.as_view()),
     path("holidays/<int:holiday_id>", api.HolidayDetailAPIView.as_view()),

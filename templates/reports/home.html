@@ -20,7 +20,7 @@
     <h2 class="font-semibold mb-3">By Department</h2>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-6">Department</th><th class="pb-2 pr-6">Headcount</th><th class="pb-2">%</th></tr></thead>
+        <thead><tr class="border-b border-slate-800 text-left text-xs text-slate-400"><th class="pb-2 pr-6">Department</th><th class="pb-2 pr-6">Headcount</th><th class="pb-2">%</th></tr></thead>
         <tbody id="headcount-dept-tbody"></tbody>
       </table>
     </div>
@@ -35,7 +35,7 @@
     <h2 class="font-semibold mb-3">Attrition by Department</h2>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
-        <thead><tr class="border-b border-white/8 text-left text-xs text-slate-400"><th class="pb-2 pr-6">Department</th><th class="pb-2 pr-6">Exits</th><th class="pb-2">Rate</th></tr></thead>
+        <thead><tr class="border-b border-slate-800 text-left text-xs text-slate-400"><th class="pb-2 pr-6">Department</th><th class="pb-2 pr-6">Exits</th><th class="pb-2">Rate</th></tr></thead>
         <tbody id="attrition-dept-tbody"></tbody>
       </table>
     </div>
@@ -46,8 +46,8 @@
 <!-- PAYROLL REGISTER -->
 <div class="tab-panel mt-6" data-panel="payroll" hidden>
   <div class="flex items-end gap-3 mb-5">
-    <div><label class="form-label">Month</label><input type="month" id="payroll-month-input" class="form-input mt-1"></div>
-    <button id="load-register-btn" class="btn-primary rounded-lg px-4 py-2 text-sm"><span>Load Register</span></button>
+    <div><label class="form-label">Month</label><input type="month" id="payroll-month-input" class="mt-1 block rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm"></div>
+    <button id="load-register-btn" class="rounded bg-[#0156fc] text-white px-4 py-2 text-sm font-semibold text-slate-900 hover:bg-[#0045d1]">Load Register</button>
   </div>
   <div id="payroll-register-content"></div>
 </div>

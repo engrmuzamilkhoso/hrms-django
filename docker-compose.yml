@@ -1,0 +1,31 @@
+# Connects to the existing standalone `saad_mysql_django_dev` container
+# (mysql:8.0, port 3308, reusing the saad_mysql_data volume the Laravel app
+# also used) via host.docker.internal rather than defining our own `db`
+# service - a second mysqld pointed at the same datadir volume would risk
+# corrupting it. Start that container separately (see RUNNING.md) before
+# `docker compose up` here.
+services:
+  web:
+    build: .
+    container_name: hrms-django
+    command: python manage.py runserver 0.0.0.0:8010
+    volumes:
+      - .:/app
+    ports:
+      - "8010:8010"
+    environment:
+      DB_HOST: host.docker.internal
+      DB_PORT: "3308"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  phpmyadmin:
+    image: phpmyadmin:5.2.3
+    container_name: hrms-phpmyadmin
+    environment:
+      PMA_HOST: host.docker.internal
+      PMA_PORT: "3308"
+    ports:
+      - "127.0.0.1:8080:80"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

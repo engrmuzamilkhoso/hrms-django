@@ -1,6 +1,6 @@
 {% extends "partials/platform_shell.html" %}
 {% load static %}
-{% comment %}Functional port of app/platform/holidays-shifts/page.tsx.{% endcomment %}
+{% comment %}Pixel-precise port of app/platform/holidays-shifts/page.tsx.{% endcomment %}
 {% block title %}Holidays & Shifts — WorkForce HRMS{% endblock %}
 {% block content %}
 <div class="page-header"><h1>Holidays & Shifts</h1><p>Manage holiday calendars, shift templates, and swap requests.</p></div>
@@ -16,16 +16,16 @@
   <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
     <div class="flex items-center gap-3">
       <label class="text-sm text-slate-400">Year:</label>
-      <select id="year-filter" class="form-select w-28 text-sm">
+      <select id="year-filter" class="rounded border border-slate-700 bg-slate-950 px-3 py-1.5 text-sm">
         <option value="2023">2023</option><option value="2024">2024</option>
         <option value="2025">2025</option><option value="2026" selected>2026</option>
       </select>
       <span class="text-sm text-slate-400"><span id="holiday-count">0</span> holidays</span>
     </div>
-    <button id="add-holiday-btn" class="btn-primary rounded-lg px-4 py-1.5 text-sm"><span>+ Add Holiday</span></button>
+    <button id="add-holiday-btn" class="rounded bg-[#0156fc] text-white px-4 py-1.5 text-sm font-semibold hover:bg-[#0045d1]">+ Add Holiday</button>
   </div>
 
-  <form id="holiday-form" hidden class="mb-6 rounded-xl border border-white/8 bg-white/3 p-5">
+  <form id="holiday-form" hidden class="mb-6 rounded-xl border border-slate-700 bg-slate-900/60 p-5">
     {% csrf_token %}
     <input type="hidden" id="holiday-id">
     <h3 class="font-medium mb-4" id="holiday-form-title">New Holiday</h3>
@@ -34,7 +34,7 @@
       <div><label class="form-label">Date</label><input name="holiday_date" type="date" required class="form-input"></div>
       <div>
         <label class="form-label">Type</label>
-        <select name="holiday_type" class="form-select">
+        <select name="holiday_type" class="form-input">
           <option value="public">Public</option><option value="optional">Optional</option><option value="restricted">Restricted</option>
         </select>
       </div>
@@ -42,8 +42,8 @@
       <div class="flex items-end pb-2"><label class="flex items-center gap-2 text-sm"><input name="is_recurring" type="checkbox"><span>Recurring annually</span></label></div>
     </div>
     <div class="mt-4 flex gap-3">
-      <button type="submit" class="btn-primary rounded-lg px-5 py-2 text-sm" id="holiday-save-btn"><span>Save</span></button>
-      <button type="button" id="holiday-cancel-btn" class="rounded-lg border border-white/10 px-4 py-2 text-sm hover:bg-white/5 transition">Cancel</button>
+      <button type="submit" class="rounded bg-[#0156fc] text-white px-5 py-2 text-sm font-semibold hover:bg-[#0045d1] disabled:opacity-60 inline-flex items-center gap-2" id="holiday-save-btn"><span id="holiday-save-spinner" class="btn-spinner" hidden></span><span id="holiday-save-label">Save</span></button>
+      <button type="button" id="holiday-cancel-btn" class="rounded border border-slate-700 px-4 py-2 text-sm hover:border-slate-500">Cancel</button>
     </div>
   </form>
 
@@ -53,7 +53,7 @@
 <!-- SHIFTS -->
 <div class="tab-panel mt-6" data-panel="shifts" hidden>
   <div class="grid gap-6 xl:grid-cols-[360px_1fr]">
-    <form id="shift-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+    <form id="shift-form" class="rounded-xl border border-slate-800 bg-slate-900/60 p-5 h-fit">
       {% csrf_token %}
       <h2 class="font-semibold mb-4">Create Shift Template</h2>
       <div class="space-y-3">
@@ -65,7 +65,7 @@
         <div><label class="form-label">OT after N hours (default 8)</label><input name="overtime_after_hours" type="number" step="0.5" value="8" class="form-input"></div>
         <div><label class="form-label">OT Multiplier (e.g. 1.5)</label><input name="overtime_multiplier" type="number" step="0.1" value="1.5" class="form-input"></div>
         <div><label class="form-label">Night Differential Multiplier (0 = off)</label><input name="night_diff_multiplier" type="number" step="0.1" value="0" class="form-input"></div>
-        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="shift-save-btn"><span>Create Shift</span></button>
+        <button type="submit" class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-white hover:bg-[#0045d1] disabled:opacity-60 flex items-center justify-center gap-2" id="shift-save-btn"><span id="shift-save-spinner" class="btn-spinner" hidden></span><span id="shift-save-label">Create Shift</span></button>
       </div>
     </form>
     <div>
@@ -78,14 +78,14 @@
 <!-- SWAPS -->
 <div class="tab-panel mt-6" data-panel="swaps" hidden>
   <div class="grid gap-6 xl:grid-cols-[340px_1fr]">
-    <form id="swap-form" class="rounded-xl border border-white/8 bg-white/3 p-5 h-fit">
+    <form id="swap-form" class="rounded-xl border border-slate-800 bg-slate-900/60 p-5 h-fit">
       {% csrf_token %}
       <h2 class="font-semibold mb-4">Request Shift Swap</h2>
       <div class="space-y-3">
-        <div><label class="form-label">From Employee</label>{% include "partials/_search_select.html" with id="ss-swap-from" name="from_employee_id" placeholder="Search employee…" %}</div>
-        <div><label class="form-label">To Employee</label>{% include "partials/_search_select.html" with id="ss-swap-to" name="to_employee_id" placeholder="Search employee…" %}</div>
+        <div><label class="form-label">From Employee</label>{% include "partials/_search_select.html" with id="ss-swap-from" name="from_employee_id" placeholder="Search employee…" search_placeholder="Type name or code…" %}</div>
+        <div><label class="form-label">To Employee</label>{% include "partials/_search_select.html" with id="ss-swap-to" name="to_employee_id" placeholder="Search employee…" search_placeholder="Type name or code…" %}</div>
         <div><label class="form-label">Swap Date</label><input name="swap_date" type="date" required class="form-input"></div>
-        <button type="submit" class="w-full btn-primary rounded-lg py-2 text-sm" id="swap-save-btn"><span>Submit Swap Request</span></button>
+        <button type="submit" class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-white hover:bg-[#0045d1] disabled:opacity-60 flex items-center justify-center gap-2" id="swap-save-btn"><span id="swap-save-spinner" class="btn-spinner" hidden></span><span id="swap-save-label">Submit Swap Request</span></button>
       </div>
     </form>
     <div>

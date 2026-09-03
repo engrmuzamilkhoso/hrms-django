@@ -97,7 +97,7 @@
         div.className = "flex items-center justify-between rounded-xl border border-white/8 bg-white/3 px-5 py-4 mb-3";
         div.innerHTML = `
           <div><p class="font-medium text-white">Payroll Run #${run.id}</p><p class="text-xs text-slate-400">${run.period_start} → ${run.period_end} · ${esc(run.status)}</p></div>
-          <button data-id="${run.id}" class="push-journal-btn rounded-xl border border-violet-500/30 px-4 py-2 text-sm text-violet-400 hover:bg-violet-500/10 transition" ${integration ? "" : "disabled"}>Push Journal →</button>`;
+          <button data-id="${run.id}" class="push-journal-btn rounded-xl border border-violet-500/30 px-4 py-2 text-sm text-violet-400 hover:bg-violet-500/10 disabled:opacity-40 transition" ${integration ? "" : "disabled"}>Push Journal →</button>`;
         list.appendChild(div);
       });
       list.querySelectorAll(".push-journal-btn").forEach((btn) =>
@@ -128,7 +128,9 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const btn = document.getElementById("setup-save-btn");
+      const label = document.getElementById("setup-save-label");
       btn.disabled = true;
+      label.textContent = "Saving…";
       try {
         await apiRequest("/accounting-integration", {
           method: "POST",
@@ -144,13 +146,16 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        label.textContent = "Save Integration";
       }
     });
 
     document.getElementById("mappings-form").addEventListener("submit", async (e) => {
       e.preventDefault();
       const btn = document.getElementById("mappings-save-btn");
+      const label = document.getElementById("mappings-save-label");
       btn.disabled = true;
+      label.textContent = "Saving…";
       try {
         await apiRequest("/accounting-integration/mappings", {
           method: "POST",
@@ -162,6 +167,7 @@
         pushToast(err.message || "Error", "error");
       } finally {
         btn.disabled = false;
+        label.textContent = "Save Mappings";
       }
     });
   });

@@ -1,3 +1,6 @@
+/**
+ * Pixel-precise port of app/platform/payroll/page.tsx.
+ */
 (function () {
   function esc(s) {
     const d = document.createElement("div");
@@ -26,11 +29,11 @@
       list.innerHTML = "";
       runs.forEach((run) => {
         const div = document.createElement("div");
-        div.className = "rounded-xl border border-white/8 bg-white/3 p-5";
+        div.className = "rounded-xl border border-slate-800 bg-slate-900/60 p-5";
         let actions = "";
-        if (run.status === "draft") actions += `<button data-id="${run.id}" data-action="calculate" class="run-action-btn rounded border border-white/10 px-3 py-1 text-xs hover:border-cyan-500 transition">Calculate</button>`;
-        if (run.status === "calculated") actions += `<button data-id="${run.id}" data-action="lock" class="run-action-btn rounded border border-white/10 px-3 py-1 text-xs hover:border-amber-500 transition">Lock</button>`;
-        if (run.status === "locked") actions += `<button data-id="${run.id}" data-action="approve" class="run-action-btn rounded bg-emerald-600/30 border border-emerald-600/50 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-600/50 transition">Approve</button>`;
+        if (run.status === "draft") actions += `<button data-id="${run.id}" data-action="calculate" class="run-action-btn rounded border border-slate-700 px-3 py-1 text-xs hover:border-cyan-500">Calculate</button>`;
+        if (run.status === "calculated") actions += `<button data-id="${run.id}" data-action="lock" class="run-action-btn rounded border border-slate-700 px-3 py-1 text-xs hover:border-amber-500">Lock</button>`;
+        if (run.status === "locked") actions += `<button data-id="${run.id}" data-action="approve" class="run-action-btn rounded bg-emerald-600/30 border border-emerald-600/50 px-3 py-1 text-xs text-emerald-300 hover:bg-emerald-600/50">Approve</button>`;
         div.innerHTML = `
           <div class="flex items-start justify-between">
             <div>
@@ -43,12 +46,12 @@
               <div class="text-slate-400">Net: <span class="text-emerald-300 font-semibold">${fmt(run.total_net)}</span></div>
             </div>
           </div>
-          <div class="mt-3 flex flex-wrap items-center gap-2">
+          <div class="mt-3 flex flex-wrap gap-2">
             ${actions}
-            <a href="/api/v1/payroll-runs/${run.id}/bank-export" class="rounded border border-white/10 px-3 py-1 text-xs hover:border-white/30 transition">Bank Export CSV</a>
+            <a href="/api/v1/payroll-runs/${run.id}/bank-export" class="rounded border border-slate-700 px-3 py-1 text-xs hover:border-slate-500">Bank Export CSV</a>
             <div class="flex items-center gap-1">
-              <input placeholder="Emp ID" class="payslip-emp-input w-20 rounded border border-white/10 bg-transparent px-2 py-1 text-xs">
-              <button data-run-id="${run.id}" class="payslip-btn rounded border border-white/10 px-3 py-1 text-xs hover:border-white/30 transition">Payslip</button>
+              <input placeholder="Emp ID" class="payslip-emp-input w-20 rounded border border-slate-700 bg-slate-950 px-2 py-1 text-xs">
+              <button data-run-id="${run.id}" class="payslip-btn rounded border border-slate-700 px-3 py-1 text-xs hover:border-slate-500">Payslip</button>
             </div>
           </div>`;
         list.appendChild(div);
@@ -86,7 +89,11 @@
     e.preventDefault();
     const fd = new FormData(e.target);
     const btn = document.getElementById("run-save-btn");
+    const spinner = document.getElementById("run-save-spinner");
+    const label = document.getElementById("run-save-label");
     btn.disabled = true;
+    spinner.hidden = false;
+    label.textContent = "Creating…";
     try {
       await apiRequest("/payroll-runs", { method: "POST", body: JSON.stringify({ period_start: fd.get("period_start"), period_end: fd.get("period_end") }) });
       pushToast("Payroll run created", "success");
@@ -96,6 +103,8 @@
       pushToast(err.message || "Error", "error");
     } finally {
       btn.disabled = false;
+      spinner.hidden = true;
+      label.textContent = "Create Run";
     }
   });
 
@@ -116,10 +125,10 @@
 
   function renderStructures() {
     const list = document.getElementById("structures-list");
-    list.innerHTML = structures.length === 0 ? "" : "";
+    list.innerHTML = "";
     structures.forEach((s) => {
       const div = document.createElement("div");
-      div.className = "rounded border border-white/8 px-3 py-2 text-sm";
+      div.className = "rounded border border-slate-800 px-3 py-2 text-sm";
       div.textContent = s.name;
       list.appendChild(div);
     });
@@ -138,7 +147,7 @@
     list.innerHTML = "";
     components.forEach((c) => {
       const div = document.createElement("div");
-      div.className = "flex items-center justify-between rounded border border-white/8 px-3 py-1.5 text-xs gap-2";
+      div.className = "flex items-center justify-between rounded border border-slate-800 px-3 py-1.5 text-xs";
       div.innerHTML = `
         <span>${esc(c.component_name)}</span>
         <span class="rounded-full px-2 py-0.5 ${c.component_type === "earning" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}">${esc(c.component_type)}</span>
@@ -151,7 +160,11 @@
     e.preventDefault();
     const fd = new FormData(e.target);
     const btn = document.getElementById("structure-save-btn");
+    const spinner = document.getElementById("structure-save-spinner");
+    const label = document.getElementById("structure-save-label");
     btn.disabled = true;
+    spinner.hidden = false;
+    label.textContent = "…";
     try {
       await apiRequest("/salary-structures", { method: "POST", body: JSON.stringify({ name: fd.get("name"), effective_from: fd.get("effective_from") }) });
       pushToast("Structure created", "success");
@@ -161,6 +174,8 @@
       pushToast(err.message || "Error", "error");
     } finally {
       btn.disabled = false;
+      spinner.hidden = true;
+      label.textContent = "Add";
     }
   });
 
@@ -168,7 +183,11 @@
     e.preventDefault();
     const fd = new FormData(e.target);
     const btn = document.getElementById("component-save-btn");
+    const spinner = document.getElementById("component-save-spinner");
+    const label = document.getElementById("component-save-label");
     btn.disabled = true;
+    spinner.hidden = false;
+    label.textContent = "Adding…";
     try {
       await apiRequest("/salary-components", {
         method: "POST",
@@ -187,6 +206,8 @@
       pushToast(err.message || "Error", "error");
     } finally {
       btn.disabled = false;
+      spinner.hidden = true;
+      label.textContent = "Add Component";
     }
   });
 
@@ -210,7 +231,7 @@
     taxRules.forEach((r) => {
       const btn = document.createElement("button");
       const active = selectedRuleId === r.id;
-      btn.className = `w-full rounded border px-3 py-2 text-left text-sm transition ${active ? "border-cyan-500 text-cyan-300" : "border-white/8 hover:border-white/20"}`;
+      btn.className = `w-full rounded border px-3 py-2 text-left text-sm transition ${active ? "border-cyan-500 text-cyan-300" : "border-slate-800 hover:border-slate-600"}`;
       btn.innerHTML = `<div class="font-medium">${esc(r.rule_name)}</div><div class="form-label">${esc((r.country_code || "").toUpperCase())} · from ${r.effective_from}</div>`;
       btn.addEventListener("click", () => loadBracketsFor(r));
       list.appendChild(btn);
@@ -241,10 +262,10 @@
         <div><label class="form-label">Range Max (blank=∞)</label><input name="range_max" type="number" class="form-input"></div>
         <div><label class="form-label">Rate (%)</label><input name="percentage_rate" type="number" step="0.01" required class="form-input"></div>
         <div><label class="form-label">Fixed Amount</label><input name="fixed_amount" type="number" step="0.01" value="0" class="form-input"></div>
-        <div class="col-span-2 lg:col-span-4"><button type="submit" class="btn-primary rounded-lg px-5 py-2 text-sm" id="bracket-save-btn"><span>Add Bracket</span></button></div>
+        <div class="col-span-2 lg:col-span-4"><button type="submit" class="rounded bg-[#0156fc] text-white px-5 py-2 text-sm font-semibold hover:bg-[#0045d1] disabled:opacity-60 inline-flex items-center gap-2" id="bracket-save-btn"><span id="bracket-save-spinner" class="btn-spinner" hidden></span><span id="bracket-save-label">Add Bracket</span></button></div>
       </form>
       <table class="w-full text-sm">
-        <thead><tr class="border-b border-white/8 text-xs text-slate-400"><th class="pb-2 text-left pr-4">Range Min</th><th class="pb-2 text-left pr-4">Range Max</th><th class="pb-2 text-left pr-4">Rate %</th><th class="pb-2 text-left pr-4">Fixed</th><th class="pb-2 text-left">Action</th></tr></thead>
+        <thead><tr class="border-b border-slate-800 text-xs text-slate-400"><th class="pb-2 text-left pr-4">Range Min</th><th class="pb-2 text-left pr-4">Range Max</th><th class="pb-2 text-left pr-4">Rate %</th><th class="pb-2 text-left pr-4">Fixed</th><th class="pb-2 text-left">Action</th></tr></thead>
         <tbody id="brackets-tbody"></tbody>
       </table>`;
 
@@ -255,7 +276,7 @@
       tbody.innerHTML = "";
       brackets.forEach((b) => {
         const tr = document.createElement("tr");
-        tr.className = "border-b border-white/5";
+        tr.className = "border-b border-slate-800/50";
         tr.innerHTML = `
           <td class="py-2 pr-4">${Number(b.range_min).toLocaleString()}</td>
           <td class="py-2 pr-4">${b.range_max !== null ? Number(b.range_max).toLocaleString() : "∞"}</td>
@@ -281,7 +302,11 @@
       e.preventDefault();
       const fd = new FormData(e.target);
       const btn = document.getElementById("bracket-save-btn");
+      const spinner = document.getElementById("bracket-save-spinner");
+      const label = document.getElementById("bracket-save-label");
       btn.disabled = true;
+      spinner.hidden = false;
+      label.textContent = "Adding…";
       try {
         await apiRequest("/tax-brackets", {
           method: "POST",
@@ -298,6 +323,8 @@
       } catch (err) {
         pushToast(err.message || "Error", "error");
         btn.disabled = false;
+        spinner.hidden = true;
+        label.textContent = "Add Bracket";
       }
     });
   }
@@ -306,7 +333,11 @@
     e.preventDefault();
     const fd = new FormData(e.target);
     const btn = document.getElementById("tax-rule-save-btn");
+    const spinner = document.getElementById("tax-rule-save-spinner");
+    const label = document.getElementById("tax-rule-save-label");
     btn.disabled = true;
+    spinner.hidden = false;
+    label.textContent = "Creating…";
     try {
       await apiRequest("/tax-rules", {
         method: "POST",
@@ -319,6 +350,8 @@
       pushToast(err.message || "Error", "error");
     } finally {
       btn.disabled = false;
+      spinner.hidden = true;
+      label.textContent = "Create Rule";
     }
   });
 
@@ -382,7 +415,9 @@
     }
     const fd = new FormData(e.target);
     const btn = document.getElementById("expense-save-btn");
+    const label = document.getElementById("expense-save-label");
     btn.disabled = true;
+    label.textContent = "Submitting…";
     try {
       await apiRequest("/expense-reimbursements", {
         method: "POST",
@@ -402,6 +437,7 @@
       pushToast(err.message || "Error", "error");
     } finally {
       btn.disabled = false;
+      label.textContent = "Submit Claim";
     }
   });
 
