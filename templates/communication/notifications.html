@@ -1,0 +1,52 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/platform/notifications/page.tsx.{% endcomment %}
+{% block title %}Notifications — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Notifications &amp; Alerts</h1><p>Inbox, notification preferences, and delivery channel configuration.</p></div>
+
+<div class="tab-bar" id="notif-tab-bar">
+  <button class="tab-btn active" data-tab="inbox">Inbox<span class="ml-2 rounded-full bg-[#0156fc] text-white px-1.5 py-0.5 text-[10px] text-slate-900 font-bold" id="notif-unread-badge" hidden></span></button>
+  <button class="tab-btn" data-tab="preferences">Preferences</button>
+</div>
+
+<div class="tab-panel mt-6" data-panel="inbox">
+  <div class="flex items-center justify-between mb-4">
+    <p class="text-sm text-slate-400" id="notif-summary">0 notifications</p>
+    <button id="notif-mark-all-btn" class="text-sm text-cyan-400 hover:underline" hidden>Mark all read</button>
+  </div>
+  <div class="space-y-2" id="notif-list"></div>
+</div>
+
+<div class="tab-panel mt-6" data-panel="preferences" hidden>
+  <div class="grid gap-6 xl:grid-cols-[1fr_360px]">
+    <div>
+      <h2 class="font-semibold mb-3">Configured Preferences</h2>
+      <div id="pref-list-wrap"></div>
+    </div>
+
+    <form id="pref-form" class="rounded-xl border border-slate-800 bg-slate-900/60 p-5 h-fit">
+      {% csrf_token %}
+      <h2 class="font-semibold mb-4">Set Notification Preference</h2>
+      <div class="space-y-3">
+        <div>
+          <label class="form-label">Event</label>
+          <select name="event_key" required class="form-input">
+            <option value="">Select event</option>
+            {% for key, label in event_keys %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+          </select>
+        </div>
+        <div class="space-y-2">
+          <label class="flex items-center gap-2 text-sm"><input name="in_app_enabled" type="checkbox" checked><span>In-App notification</span></label>
+          <label class="flex items-center gap-2 text-sm"><input name="email_enabled" type="checkbox" checked><span>Email</span></label>
+          <label class="flex items-center gap-2 text-sm"><input name="sms_enabled" type="checkbox"><span>SMS</span></label>
+          <label class="flex items-center gap-2 text-sm"><input name="whatsapp_enabled" type="checkbox"><span>WhatsApp</span></label>
+          <label class="flex items-center gap-2 text-sm"><input name="digest_mode" type="checkbox"><span>Digest mode (daily summary)</span></label>
+        </div>
+        <button class="w-full rounded bg-[#0156fc] py-2 text-sm font-semibold text-slate-900 hover:bg-[#0045d1]">Save Preference</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/communication-notifications.js' %}"></script>{% endblock %}

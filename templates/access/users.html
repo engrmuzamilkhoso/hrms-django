@@ -1,0 +1,70 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/platform/users/page.tsx.{% endcomment %}
+{% block title %}User Accounts — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="animate-fade-up">
+  <div class="page-header">
+    <p class="text-xs font-semibold uppercase tracking-widest text-violet-400 mb-2">Organization</p>
+    <h1 class="text-3xl font-bold text-slate-100">User Accounts</h1>
+    <p class="mt-2 text-sm text-slate-500">Create and manage login accounts for your organization members. Each person gets their own credentials.</p>
+  </div>
+
+  <div id="banners"></div>
+
+  <div class="flex flex-wrap items-center gap-3 mb-6">
+    <div class="relative flex-1 min-w-[200px]">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input id="user-search" placeholder="Search by name, email or role…" class="form-input pl-9 py-2 text-sm w-full">
+    </div>
+    <button id="create-account-btn" class="btn-primary flex items-center gap-2">
+      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+      <span>Create Account</span>
+      <span id="user-limit-badge" class="ml-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-semibold" hidden></span>
+    </button>
+  </div>
+
+  <form id="invite-form" hidden class="mb-6 rounded-2xl border border-violet-500/20 bg-violet-500/5 p-6">
+    {% csrf_token %}
+    <h2 class="font-semibold text-slate-200 mb-4">New User Account</h2>
+    <div class="grid gap-4 sm:grid-cols-2">
+      <div><label class="form-label">Full Name *</label><input name="name" required placeholder="e.g. Ahmed Khan" class="form-input"></div>
+      <div><label class="form-label">Email Address *</label><input name="email" type="email" required placeholder="ahmed@company.com" class="form-input"></div>
+      <div>
+        <label class="form-label">Role *</label>
+        {% include "partials/_search_select.html" with id="ss-invite-role" name="role" options=roles_json placeholder="— Select role —" %}
+        <p class="mt-1 text-xs text-slate-600">Org Admin / HR Manager → Organization dashboard · Team Lead → Manager dashboard · Employee → Self-service</p>
+      </div>
+      <div><label class="form-label">Designation (optional)</label><input name="designation" placeholder="e.g. Software Engineer" class="form-input"></div>
+      <div class="sm:col-span-2 flex gap-3">
+        <button type="submit" class="btn-primary disabled:opacity-50" id="invite-save-btn"><span id="invite-save-spinner" class="btn-spinner" hidden></span><span id="invite-save-label">Create Account &amp; Show Credentials</span></button>
+        <button type="button" id="invite-cancel-btn" class="rounded-xl border border-white/10 px-4 py-2 text-sm text-slate-400 hover:bg-white/5 transition">Cancel</button>
+      </div>
+    </div>
+  </form>
+
+  <div class="overflow-x-auto rounded-xl border border-white/8">
+    <table class="data-table w-full">
+      <thead>
+        <tr><th>User</th><th>Role</th><th>Employee Code</th><th>Status</th><th>Created</th><th>Actions</th></tr>
+      </thead>
+      <tbody id="users-tbody"><tr><td colspan="6" class="text-center py-12 text-slate-500">Loading…</td></tr></tbody>
+    </table>
+  </div>
+
+  <div id="paywall-modal"></div>
+
+  <div class="mt-8 rounded-xl border border-white/6 bg-white/2 p-5">
+    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wide mb-4">Role Access Guide</h3>
+    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div class="rounded-xl border border-violet-500/20 bg-violet-500/6 p-4"><p class="text-sm font-semibold text-slate-200">Org Admin</p><p class="text-xs text-violet-400 mt-0.5">Full org access</p><p class="text-xs text-slate-500 mt-1">All modules, payroll, reports, user management</p></div>
+      <div class="rounded-xl border border-indigo-500/20 bg-indigo-500/6 p-4"><p class="text-sm font-semibold text-slate-200">HR Manager</p><p class="text-xs text-violet-400 mt-0.5">HR operations</p><p class="text-xs text-slate-500 mt-1">Employees, leave, payroll, recruitment, reports</p></div>
+      <div class="rounded-xl border border-cyan-500/20 bg-cyan-500/6 p-4"><p class="text-sm font-semibold text-slate-200">Team Lead</p><p class="text-xs text-violet-400 mt-0.5">Team management</p><p class="text-xs text-slate-500 mt-1">My team, leave approvals, attendance, performance</p></div>
+      <div class="rounded-xl border border-emerald-500/20 bg-emerald-500/6 p-4"><p class="text-sm font-semibold text-slate-200">Employee</p><p class="text-xs text-violet-400 mt-0.5">Self-service only</p><p class="text-xs text-slate-500 mt-1">Own attendance, leave requests, payslips</p></div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/access-users.js' %}"></script>{% endblock %}

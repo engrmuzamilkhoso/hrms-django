@@ -89,7 +89,7 @@ class OfficeListCreateAPIView(EnvelopeAPIView):
 
 class OfficeDetailAPIView(EnvelopeAPIView):
     def get_permissions(self):
-        if self.request.method in ("PUT", "DELETE"):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
             return [ADMIN_OR_HR()]
         return super().get_permissions()
 
@@ -109,6 +109,8 @@ class OfficeDetailAPIView(EnvelopeAPIView):
                 setattr(office, field, request.data[field])
         office.save()
         return self.ok(OfficeSerializer(office).data, "Office updated successfully")
+
+    patch = put
 
     def delete(self, request, office_id):
         office = get_object_or_404(Office, pk=office_id)
@@ -152,7 +154,7 @@ class DepartmentListCreateAPIView(EnvelopeAPIView):
 
 class DepartmentDetailAPIView(EnvelopeAPIView):
     def get_permissions(self):
-        if self.request.method in ("PUT", "DELETE"):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
             return [ADMIN_OR_HR()]
         return super().get_permissions()
 
@@ -169,6 +171,8 @@ class DepartmentDetailAPIView(EnvelopeAPIView):
                 setattr(department, field, request.data[field])
         department.save()
         return self.ok(DepartmentSerializer(department).data, "Department updated successfully")
+
+    patch = put
 
     def delete(self, request, department_id):
         department = get_object_or_404(Department, pk=department_id)
@@ -208,7 +212,7 @@ class TeamListCreateAPIView(EnvelopeAPIView):
 
 class TeamDetailAPIView(EnvelopeAPIView):
     def get_permissions(self):
-        if self.request.method in ("PUT", "DELETE"):
+        if self.request.method in ("PUT", "PATCH", "DELETE"):
             return [ADMIN_OR_HR()]
         return super().get_permissions()
 
@@ -225,6 +229,8 @@ class TeamDetailAPIView(EnvelopeAPIView):
                 setattr(team, field, request.data[field])
         team.save()
         return self.ok(TeamSerializer(team).data, "Team updated successfully")
+
+    patch = put
 
     def delete(self, request, team_id):
         team = get_object_or_404(Team, pk=team_id)

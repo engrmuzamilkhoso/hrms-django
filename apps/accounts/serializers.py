@@ -23,6 +23,29 @@ class UserSerializer(serializers.ModelSerializer):
         ]
 
 
+class OrgUserSerializer(serializers.ModelSerializer):
+    """Mirrors InviteController::index()'s per-user shape (People\\InviteController.php)."""
+
+    roles = serializers.SerializerMethodField()
+    employee_code = serializers.SerializerMethodField()
+    designation = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ["id", "name", "email", "is_active", "roles", "employee_code", "designation", "created_at"]
+
+    def get_roles(self, obj):
+        return list(obj.roles.values_list("name", flat=True))
+
+    def get_employee_code(self, obj):
+        employee = getattr(obj, "employee", None)
+        return employee.employee_code if employee else None
+
+    def get_designation(self, obj):
+        employee = getattr(obj, "employee", None)
+        return employee.designation_text if employee else None
+
+
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()

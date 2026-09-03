@@ -1,0 +1,44 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/platform/ai-billing/page.tsx.{% endcomment %}
+{% block title %}AI &amp; Credits — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>AI Features &amp; Credits</h1><p>Purchase AI credit bundles and track usage across CV scoring, parsing, and payroll anomaly detection.</p></div>
+
+<div class="mt-6 grid gap-4 sm:grid-cols-3">
+  <div class="rounded-xl border border-violet-800 bg-violet-950/30 p-6">
+    <p class="text-xs text-slate-400 uppercase tracking-wide">Current Balance</p>
+    <p class="mt-3 text-5xl font-bold text-violet-300" id="ai-balance">—</p>
+    <p class="mt-1 text-xs text-slate-500">AI credits</p>
+  </div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+    <p class="text-xs text-slate-400 uppercase tracking-wide">Lifetime Used</p>
+    <p class="mt-3 text-3xl font-bold text-rose-300" id="ai-used">—</p>
+    <p class="mt-1 text-xs text-slate-500">credits consumed</p>
+  </div>
+  <div class="rounded-xl border border-slate-800 bg-slate-900/60 p-6">
+    <p class="text-xs text-slate-400 uppercase tracking-wide">Transactions</p>
+    <p class="mt-3 text-3xl font-bold text-cyan-300" id="ai-tx-count">—</p>
+    <p class="mt-1 text-xs text-slate-500">recorded events</p>
+  </div>
+</div>
+
+<h2 class="mt-8 font-semibold">Top-Up Bundles</h2>
+<p class="mt-1 text-xs text-slate-500">Credits are deducted per action: CV parse ~10, CV score ~20, payroll anomaly scan ~50.</p>
+<div class="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4" id="ai-bundles"></div>
+
+<form id="ai-custom-form" class="mt-5 flex gap-3 items-end">
+  {% csrf_token %}
+  <div>
+    <label class="form-label">Custom amount (credits, min 100)</label>
+    <input type="number" name="credits" min="100" step="100" placeholder="e.g. 5000" class="mt-1 block rounded border border-slate-700 bg-slate-950 px-3 py-2 text-sm w-40">
+  </div>
+  <button class="rounded bg-violet-500 px-4 py-2 text-sm font-semibold text-white hover:bg-violet-400">Top-Up Custom</button>
+</form>
+
+<div class="mt-10">
+  <h2 class="font-semibold mb-4">Usage Ledger</h2>
+  <div id="ai-ledger-wrap"></div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/ai-billing-home.js' %}"></script>{% endblock %}

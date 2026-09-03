@@ -8,22 +8,43 @@ session form POST instead (see apps.accounts.views), but these endpoints
 remain available/byte-compatible for any other API caller.
 """
 
+import random
+import string
+
+from django.conf import settings
 from django.contrib.auth import login as django_login
 from django.contrib.auth import logout as django_logout
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework.authtoken.models import Token
 from rest_framework.permissions import AllowAny, IsAuthenticated
 
+from apps.core.permissions import HasRole
 from apps.core.views import EnvelopeAPIView
 
 from . import services
 from .models import User
 from .serializers import (
     LoginSerializer,
+    OrgUserSerializer,
     RegisterOrganizationSerializer,
     ResendOtpSerializer,
     UserSerializer,
     VerifySignupOtpSerializer,
 )
+
+ADMIN_ONLY = HasRole.of(["Org Admin", "HR Manager"])
+
+# Roles the Users & Roles page is allowed to grant - Super Admin is
+# deliberately excluded (mirrors InviteController::invite()'s explicit
+# rejection of role === 'Super Admin').
+ASSIGNABLE_ROLES = ["Org Admin", "HR Manager", "Team Lead", "Employee", "Finance Viewer", "Recruiter", "Interviewer"]
+_AUTO_EMPLOYEE_ROLES = {"Employee", "Team Lead", "HR Manager", "Org Admin"}
+
+
+def _generate_password():
+    alphabet = string.ascii_letters + string.digits
+    return "".join(random.choices(alphabet, k=10))
 
 
 class RegisterOrganizationAPIView(EnvelopeAPIView):
@@ -135,3 +156,120 @@ class MeAPIView(EnvelopeAPIView):
                 "is_manager": is_manager,
             }
         )
+
+
+# ---------------------------------------------------------------------------
+# /api/v1/users* - user account management, ported from
+# App\\Http\\Controllers\\People\\InviteController (see apps/access/urls.py
+# comment: not linked from the sidebar in the source app, but the same
+# /platform/users page as here).
+# ---------------------------------------------------------------------------
+class UserListAPIView(EnvelopeAPIView):
+    def get(self, request):
+        users = (
+            User.objects.filter(organization_id=request.user.organization_id)
+            .select_related("employee")
+            .prefetch_related("roles")
+            .order_by("-created_at")
+        )
+        return self.ok(OrgUserSerializer(users, many=True).data)
+
+
+class UserInviteAPIView(EnvelopeAPIView):
+    permission_classes = [ADMIN_ONLY]
+
+    def post(self, request):
+        from apps.access.models import Role, UserRoleAssignment
+        from apps.people.models import Employee
+
+        data = request.data
+        name = (data.get("name") or "").strip()
+        email = (data.get("email") or "").strip()
+        role_name = data.get("role")
+        if not name or not email or not role_name:
+            return self.error(
+                "The given data was invalid.", 422,
+                errors={"name": ["required"], "email": ["required"], "role": ["required"]},
+            )
+        if role_name not in ASSIGNABLE_ROLES:
+            return self.error("Super Admin accounts cannot be created from here.", 403)
+        if User.objects.filter(email=email).exists():
+            return self.error(
+                "The given data was invalid.", 422, errors={"email": ["The email has already been taken."]}
+            )
+
+        org_id = request.user.organization_id
+        plain_password = _generate_password()
+
+        user = User.objects.create_user(
+            email=email, password=plain_password, organization_id=org_id, name=name, is_active=True,
+        )
+
+        role = Role.objects.filter(organization_id=org_id, name=role_name).first()
+        if role:
+            UserRoleAssignment.objects.get_or_create(user=user, role=role)
+
+        employee_id = data.get("employee_id")
+        if employee_id:
+            Employee.objects.filter(pk=employee_id, organization_id=org_id).update(user_id=user.id)
+        elif role_name in _AUTO_EMPLOYEE_ROLES:
+            base = Employee.all_objects.filter(organization_id=org_id).order_by("-id").first()
+            seq = (base.id if base else 0) + 1
+            code = f"EMP-{seq:04d}"
+            while Employee.all_objects.filter(employee_code=code).exists():
+                seq += 1
+                code = f"EMP-{seq:04d}"
+            Employee.objects.create(
+                organization_id=org_id,
+                user_id=user.id,
+                full_name=name,
+                email=email,
+                employee_code=code,
+                designation_text=data.get("designation") or role_name,
+                department_id=data.get("department_id") or None,
+                employment_status="active",
+                hire_date=timezone.now().date(),
+            )
+
+        return self.ok(
+            {
+                "user_id": user.id,
+                "name": user.name,
+                "email": user.email,
+                "role": role_name,
+                "password": plain_password,
+                "login_url": f"{settings.FRONTEND_BASE_URL}/auth/login/",
+            },
+            "Account created successfully. Share the credentials with the user.",
+        )
+
+
+class UserActivateAPIView(EnvelopeAPIView):
+    permission_classes = [ADMIN_ONLY]
+
+    def post(self, request, user_id):
+        user = get_object_or_404(User, pk=user_id, organization_id=request.user.organization_id)
+        user.is_active = True
+        user.save(update_fields=["is_active", "updated_at"])
+        return self.ok(None, "User activated.")
+
+
+class UserDeactivateAPIView(EnvelopeAPIView):
+    permission_classes = [ADMIN_ONLY]
+
+    def post(self, request, user_id):
+        user = get_object_or_404(User, pk=user_id, organization_id=request.user.organization_id)
+        user.is_active = False
+        user.save(update_fields=["is_active", "updated_at"])
+        return self.ok(None, "User deactivated.")
+
+
+class UserResetPasswordAPIView(EnvelopeAPIView):
+    permission_classes = [ADMIN_ONLY]
+
+    def post(self, request, user_id):
+        user = get_object_or_404(User, pk=user_id, organization_id=request.user.organization_id)
+        plain_password = _generate_password()
+        user.set_password(plain_password)
+        user.save(update_fields=["password", "updated_at"])
+        return self.ok({"email": user.email, "password": plain_password}, "Password reset. Share new credentials with the user.")

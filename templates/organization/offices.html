@@ -1,0 +1,19 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/dashboard/organization/offices/{page,create/page}.tsx,
+rebuilt against the real /offices endpoint (the source app's fetch calls hit
+the nonexistent /api/v1/organization/offices).{% endcomment %}
+{% block title %}Offices — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between">
+  <div class="page-header mb-0"><h1>Offices</h1><p>Manage your office locations</p></div>
+  <button id="office-new-btn" class="btn-primary rounded-xl px-5 py-2.5 text-sm"><span>+ Add Office</span></button>
+</div>
+
+<div id="office-grid-wrap" class="mt-6">
+  <div class="flex justify-center py-12"><div class="h-6 w-6 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div></div>
+</div>
+
+<div id="office-form-backdrop"></div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/organization-offices.js' %}"></script>{% endblock %}

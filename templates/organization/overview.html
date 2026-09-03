@@ -1,0 +1,12 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/dashboard/organization/page.tsx.{% endcomment %}
+{% block title %}Organization Settings — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Organization Settings</h1><p>Manage your organization configuration and structure</p></div>
+
+<div id="org-overview-wrap" class="mt-6">
+  <div class="flex justify-center py-12"><div class="h-6 w-6 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div></div>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/organization-overview.js' %}"></script>{% endblock %}

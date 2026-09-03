@@ -9,4 +9,9 @@ urlpatterns = [
     path("auth/login", api.LoginAPIView.as_view()),
     path("auth/logout", api.LogoutAPIView.as_view()),
     path("auth/me", api.MeAPIView.as_view()),
+    path("users", api.UserListAPIView.as_view()),
+    path("users/invite", api.UserInviteAPIView.as_view()),
+    path("users/<int:user_id>/activate", api.UserActivateAPIView.as_view()),
+    path("users/<int:user_id>/deactivate", api.UserDeactivateAPIView.as_view()),
+    path("users/<int:user_id>/reset-password", api.UserResetPasswordAPIView.as_view()),
 ]

@@ -1,0 +1,41 @@
+{% extends "partials/platform_shell.html" %}
+{% load static %}
+{% comment %}Pixel-precise port of app/dashboard/organization/departments/page.tsx.{% endcomment %}
+{% block title %}Departments — WorkForce HRMS{% endblock %}
+{% block content %}
+<div class="page-header"><h1>Departments</h1><p>Manage your organisational structure.</p></div>
+
+<div class="grid gap-6 xl:grid-cols-[1fr_380px]">
+  <div>
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="font-semibold text-slate-200">All Departments</h2>
+      <button id="dept-new-btn" class="btn-primary rounded-xl px-4 py-2 text-sm"><span>+ New Department</span></button>
+    </div>
+    <div id="dept-list-wrap">
+      <div class="flex justify-center py-12"><div class="h-6 w-6 rounded-full border-2 border-violet-500/30 border-t-violet-500 animate-spin"></div></div>
+    </div>
+  </div>
+
+  <form id="dept-form" hidden class="rounded-xl border border-white/8 bg-slate-900/60 p-5 h-fit space-y-4">
+    {% csrf_token %}
+    <input type="hidden" id="dept-edit-id">
+    <div class="flex items-center justify-between">
+      <h3 class="font-semibold text-white" id="dept-form-title">New Department</h3>
+      <button type="button" id="dept-form-close" class="text-slate-500 hover:text-slate-300 text-xl leading-none">&times;</button>
+    </div>
+    <div>
+      <label class="form-label">Name *</label>
+      <input name="name" required placeholder="e.g. Engineering" class="form-input">
+      <p class="mt-1 text-xs text-rose-400 hidden" id="dept-name-error">Department name is required</p>
+    </div>
+    <div><label class="form-label">Code</label><input name="code" placeholder="e.g. ENG" class="form-input"></div>
+    <div><label class="form-label">Description</label><textarea name="description" rows="3" placeholder="Optional…" class="form-input resize-none"></textarea></div>
+    <label class="flex items-center gap-3 cursor-pointer select-none">
+      <input type="checkbox" name="is_active" checked class="h-4 w-4 accent-violet-500">
+      <span class="text-sm text-slate-300">Active</span>
+    </label>
+    <button type="submit" class="w-full btn-primary rounded-xl py-2.5 text-sm disabled:opacity-50" id="dept-save-btn"><span id="dept-save-label">Create Department</span></button>
+  </form>
+</div>
+{% endblock %}
+{% block extra_js %}<script src="{% static 'js/pages/organization-departments.js' %}"></script>{% endblock %}
